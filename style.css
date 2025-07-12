@@ -73,7 +73,7 @@ svg {
 }
 
 .info-box {
-  position: absolute;
+  position: fixed;
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.5);
@@ -184,8 +184,8 @@ svg {
 
 .close-info {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 20px;
+  right: 20px;
   z-index: 9999;
   cursor: pointer;
   font-size: 2rem;
