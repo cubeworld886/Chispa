@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lyra</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="background"></canvas>
+
+<div id="sky">
+  <svg id="constellation" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+    <!-- Líneas -->
+    <line x1="700" y1="300" x2="650" y2="400" />
+    <line x1="650" y1="400" x2="500" y2="450" />
+    <line x1="500" y1="450" x2="550" y2="600" />
+    <line x1="550" y1="600" x2="700" y2="300" />
+    <line x1="550" y1="600" x2="600" y2="520" />
+
+    <!-- Estrellas con IDs para cada capítulo -->
+    <g class="star-group" id="vega-group">
+      <circle class="star" id="vega" cx="700" cy="300" r="8" />
+      <text class="label" x="710" y="295">Vega IV</text>
+    </g>
+
+    <g class="star-group" id="zeta-group">
+      <circle class="star" cx="650" cy="400" r="5" />
+      <text class="label" x="660" y="395">Zeta Lyrae II</text>
+    </g>
+
+    <g class="star-group" id="sheliak-group" pointer-events="visible">
+      <circle class="star" cx="500" cy="450" r="6" />
+      <text class="label" x="510" y="445">Sheliak I</text>
+    </g>
+
+    <g class="star-group" id="sulafat-group" pointer-events="visible">
+      <circle class="star" cx="550" cy="600" r="6" />
+      <text class="label" x="560" y="595">Sulafat III</text>
+    </g>
+
+    <g class="star-group" id="delta-group" pointer-events="visible">
+      <circle class="star" cx="600" cy="520" r="5" />
+      <text class="label" x="610" y="515">Delta Lyrae V</text>
+    </g>
+  </svg>
+</div>
+
+<div id="vega-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Vega</h2>
+  <div class="poem-container">
+    <p>La vi.</p>
+
+    <p>No como quien espera.<br>
+    Como quien recuerda<br>
+    la forma exacta del milagro…<br>
+    antes de que se rompiera.</p>
+
+    <p>Y allí estaba,<br>
+    con la chispa aún bailando en sus ojos,<br>
+    como si el universo, en un último gesto,<br>
+    me permitiera verla<br>
+    sin el ruido del pasado.</p>
+
+    <p>No hablaba.</p>
+
+    <p>Pero su silencio tenía la forma<br>
+    de una pregunta que yo no podía responder<br>
+    sin incendiarlo todo otra vez.</p>
+
+    <p>Y esa chispa…<br>
+    tan mínima,<br>
+    tan cierta,<br>
+    me dolió más que todas sus despedidas.</p>
+
+    <p>Porque no decía: “vuelve”.<br>
+    Decía:<br>
+    “¿Quién eres ahora que ya me perdiste?”</p>
+
+    <p>Y yo tenía tantas respuestas…<br>
+    pero todas dolían más que callar.</p>
+
+    <p>Pensé en todos los caminos no tomados,<br>
+    en cada versión de mí que no falló,<br>
+    en el mundo donde aún sostengo su mano<br>
+    sin miedo a que se me rompa entre los dedos.</p>
+
+    <p>Pensé en decirle:</p>
+
+    <p>“No quiero que regreses.<br>
+    Solo quiero que me mires,<br>
+    como si fuera la primera vez.<br>
+    Como si aún pudiera salvar lo que soy.”</p>
+
+    <p>Y aunque las palabras<br>
+    me temblaban como puñales sin filo,<br>
+    las dejé salir…</p>
+
+    <p>no para abrir una puerta,<br>
+    sino para no quedarme con el eco.</p>
+
+    <p>No esperaba consuelo.</p>
+
+    <p>Solo quise<br>
+    que, por un instante,<br>
+    su mirada me rozara<br>
+    sin el peso del daño.</p>
+
+    <p>Que me viera.<br>
+    No como un regreso.<br>
+    Sino como alguien<br>
+    que aprendió a hablar tarde…<br>
+    pero al fin sin máscaras.</p>
+
+    <p>Pero hay verdades<br>
+    que se vuelven egoísmo<br>
+    cuando se lanzan sobre un alma abierta.</p>
+
+    <p>Y yo no soy un ladrón de paz.</p>
+
+    <p>Así que me tragué el verbo<br>
+    como quien se traga un nombre prohibido,<br>
+    y dejé que el instante se fuera…</p>
+
+    <p>sin redención,<br>
+    sin promesa,<br>
+    pero con dignidad.</p>
+  </div>
+</div>
+
+<div id="sheliak-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Sheliak</h2>
+  <div class="poem-container">
+    <p>No fue por piedad…<br>
+    pero aquel día, cuando la vi,<br>
+    algo en mí eligió el abismo del silencio.</p>
+
+    <p>Pude decirlo todo.</p>
+
+    <p>El temblor en mis manos aún sabía su nombre,<br>
+    y la chispa en sus ojos —<br>
+    tenue, pero intacta —<br>
+    parecía el último milagro que no merecía tocar.</p>
+
+    <p>Pero hablo del instante como se habla de una ruina:<br>
+    no por lo que pudo ser,<br>
+    sino por lo que dolería forzar.</p>
+
+    <p>Porque hay momentos<br>
+    donde hasta la verdad puede ser violencia.</p>
+
+    <p>Y yo ya no quería herir,<br>
+    ni siquiera con la luz.</p>
+
+    <p>Así que me quedé ahí,<br>
+    observando el borde de su alma<br>
+    como quien ve una casa en llamas<br>
+    sin atreverse a entrar…</p>
+
+    <p>no por cobardía,<br>
+    sino por no convertir la ceniza en testigo.</p>
+  </div>
+</div>
+
+<div id="sulafat-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Sulafat</h2>
+  <div class="poem-container">
+    <p>Lo que vino después<br>
+    no fue castigo divino.</p>
+
+    <p>Fue más exacto.</p>
+
+    <p>Como si el mundo solo me quitara<br>
+    lo que nunca supe sostener con las dos manos.</p>
+
+    <p>Perdí su risa,<br>
+    el eco cálido de lo que un día fue refugio,<br>
+    la costumbre de un hogar que pronunciaba mi nombre<br>
+    como si aún lo mereciera.</p>
+
+    <p>Y perdí algo más cruel:<br>
+    el derecho a imaginar el futuro.</p>
+
+    <p>No me fui.<br>
+    Me borré.</p>
+
+    <p>Como quien aún respira,<br>
+    pero ya no ocupa espacio en el recuerdo.</p>
+
+    <p>Ahora camino con la grieta viva,<br>
+    no como cicatriz,<br>
+    sino como nombre.</p>
+
+    <p>La máscara que usé para sobrevivir<br>
+    ya no me cubre,<br>
+    pero su forma<br>
+    aún me duele en el rostro.</p>
+
+    <p>No me justifico.</p>
+
+    <p>Ni espero que comprenda<br>
+    los temblores que me habitaron.</p>
+
+    <p>No hay redención en explicar lo que rompí.</p>
+
+    <p>Solo queda aceptar<br>
+    que amé torcido,<br>
+    que herí<br>
+    como quien confunde el calor con la quema.</p>
+
+    <p>Porque hay cuerpos<br>
+    que no fueron hechos<br>
+    para cargar luz.</p>
+  </div>
+</div>
+
+<div id="delta-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Delta Lyrae</h2>
+  <div class="poem-container">
+    <p>No espero que vuelva.<br>
+    Ni que entienda.</p>
+
+    <p>Porque hay silencios<br>
+    que no se llenan con palabras,<br>
+    sino con la ausencia que dejaron.</p>
+
+    <p>Me quedo con lo que no supe sostener:<br>
+    su nombre,<br>
+    su sombra,<br>
+    la visión de lo eterno que no entendí a tiempo.</p>
+
+    <p>No soy mejor.<br>
+    Solo soy más consciente.<br>
+    Y a veces, eso es más cruel que la culpa.</p>
+
+    <p>Porque ahora sé<br>
+    que no todos los fuegos queman para herir.</p>
+
+    <p>Algunos arden solo para recordarte<br>
+    lo que perdiste cuando elegiste<br>
+    protegerte…<br>
+    en lugar de quedarte.</p>
+
+    <p>Si alguna vez me nombra,<br>
+    aunque sea en un suspiro,<br>
+    que sepa esto:</p>
+
+    <p>No fui valiente.<br>
+    Pero esta vez…<br>
+    no mentí.</p>
+
+    <p>Y si todavía siente algo,<br>
+    aunque sea mínimo,</p>
+
+    <p>quiero que sepa<br>
+    que yo sí quiero volver.</p>
+
+    <p>Aquí.<br>
+    En esta vida.<br>
+    Y hacerlo bien.</p>
+  </div>
+</div>
+
+<div id="zeta-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Zeta Lyrae</h2>
+  <div class="poem-container">
+    <p>Hay decisiones que parecen pequeñas.</p>
+
+    <p>Un mensaje no enviado.<br>
+    Una mano que no se extiende.<br>
+    Un silencio que dura un segundo más<br>
+    de lo que el alma podía sostener.</p>
+
+    <p>Y entonces el mundo gira distinto.</p>
+
+    <p>Como si los relojes decidieran no perdonarte.<br>
+    Como si cada versión de ti que quiso quedarse<br>
+    quedara atrapada al otro lado del vidrio.</p>
+
+    <p>A veces imagino<br>
+    qué hubiera pasado si no te fallaba.</p>
+
+    <p>Si aquella noche —la última sin herida—<br>
+    me hubiera abrazado a ti<br>
+    como quien defiende un templo a punto de caer.</p>
+
+    <p>Si no hubiera creído que ya era tarde,<br>
+    si no me hubiera creído tan roto<br>
+    que solo supe romper.</p>
+
+    <p>¿Y si me hubiera quedado?</p>
+
+    <p>No por costumbre.<br>
+    No por miedo.</p>
+
+    <p>Sino por amor.<br>
+    Del verdadero:<br>
+    ese que no pide pruebas,<br>
+    ese que tiembla pero no huye.</p>
+
+    <p>Pero elegí lo fácil.</p>
+
+    <p>Y lo fácil me convirtió en algo<br>
+    que no reconozco sin tus ojos.</p>
+
+    <p>Porque cuando la herida es interna,<br>
+    hasta el amor se vuelve castigo.</p>
+  </div>
+</div>
+
+<audio id="bg-music" preload="auto" loop>
+  <source src="opciones.mp3" type="audio/mpeg">
+</audio>
+
+<script src="script.js"></script>
+</body>
+</html>
