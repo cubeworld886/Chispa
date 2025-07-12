@@ -184,8 +184,8 @@ svg {
 
 .close-info {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 30px;
+  right: 15px;
   z-index: 9999;
   cursor: pointer;
   font-size: 2rem;
