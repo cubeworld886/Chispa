@@ -3,69 +3,122 @@ const stars = [
   { groupId: 'zeta-group', boxId: 'zeta-info' },
   { groupId: 'sheliak-group', boxId: 'sheliak-info' },
   { groupId: 'sulafat-group', boxId: 'sulafat-info' },
-  { groupId: 'delta-group', boxId: 'delta-info' }
+  { groupId: 'delta-group', boxId: 'delta-info' },
+  { groupId: 'eos-group', boxId: 'eos-info' }
 ];
 
-const audio = document.getElementById('bg-music');
+const totalVisitables = stars.filter(s => s.groupId !== 'eos-group').length;
+
 let currentBox = null;
 let currentGroup = null;
+let visitedStars = new Set();
 
-// Asignar evento a cada estrella
+const audio = document.getElementById('bg-music');
+
 stars.forEach(({ groupId, boxId }) => {
   const starGroup = document.getElementById(groupId);
   const infoBox = document.getElementById(boxId);
 
   if (starGroup && infoBox) {
     starGroup.addEventListener('click', () => {
-      // Cierra caja abierta
-      if (currentBox) {
-        currentBox.classList.remove('visible');
-        currentBox.classList.add('hidden');
-      }
-      if (currentGroup) {
-        currentGroup.classList.remove('expanded');
-      }
+      // Evitar que Eos se abra si aún no está desbloqueada
+      if (groupId === 'eos-group' && !starGroup.classList.contains('unlocked')) return;
 
-      // Muestra la nueva
+      // Cerrar cajas anteriores
+      if (currentBox) currentBox.classList.replace('visible', 'hidden');
+      if (currentGroup) currentGroup.classList.remove('expanded');
+
+		// Añadir fundido entre estrellas
+		document.body.classList.add("transitioning");
+		setTimeout(() => document.body.classList.remove("transitioning"), 500);
+
+      // Mostrar nueva info
       starGroup.classList.add('expanded');
-      infoBox.classList.remove('hidden');
-      infoBox.classList.add('visible');
+      infoBox.classList.replace('hidden', 'visible');
       currentBox = infoBox;
       currentGroup = starGroup;
 
-      // Activa animación
-      const poem = infoBox.querySelector('.poem-container');
-      if (poem) {
-        poem.classList.remove('visible'); // reset animación
-        void poem.offsetWidth; // reflow
-        poem.classList.add('visible');
+		// Reiniciar posición del scroll en el contenedor del poema
+		const scrollBox = infoBox.querySelector('.poem-container');
+		if (scrollBox) scrollBox.scrollTop = 0;
+
+      // Registrar visita si no es Eos
+      if (groupId !== 'eos-group') {
+        visitedStars.add(groupId);
+
+        if (visitedStars.size === totalVisitables) {
+          const eosGroup = document.getElementById("eos-group");
+          if (eosGroup) {
+            eosGroup.classList.remove("hidden");
+            eosGroup.classList.add("unlocked");
+            triggerEosAnimation();
+          }
+        }
       }
 
-      // Reproducir música
-      if (audio && audio.paused) {
-        audio.volume = 0.4;
-        audio.loop = true;
-        audio.play().catch(() => {});
+      // Animar poema
+      const poem = infoBox.querySelector('.poem-container');
+      if (poem) {
+        poem.classList.remove('visible');
+        void poem.offsetWidth;
+        poem.classList.add('visible');
+
+			  if (groupId === 'eos-group') {
+			    generateTears();
+				 animatePoemLines();
+			  }
       }
+
+
+    // Lógica de música
+    // 🎵 Lógica musical
+      const bg = document.getElementById("bg-music");
+      const altair1 = document.getElementById("altair-music");
+      const altair2 = document.getElementById("altair-music-2");
+
+      if (groupId === "eos-group") {
+        if (bg && !bg.paused) bg.pause();
+
+        if (altair2) {
+          altair2.pause();
+          altair2.currentTime = 0;
+          altair2.loop = false;
+        }
+
+        if (altair1) {
+          altair1.currentTime = 0;
+          altair1.play().catch(() => {});
+          altair1.onended = () => {
+            if (altair2) {
+              altair2.currentTime = 0;
+              altair2.loop = true;
+              altair2.play().catch(() => {});
+            }
+          };
+        }
+      } else {
+        const altairActive =
+          (altair1 && !altair1.paused) || (altair2 && !altair2.paused);
+        if (!altairActive && bg && bg.paused) {
+          bg.play().catch(() => {});
+        }
+      }
+
+
     });
   }
 });
 
-document.querySelectorAll('.close-info').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (currentBox) {
-      currentBox.classList.remove('visible');
-      currentBox.classList.add('hidden');
+// Botones de cierre
+document.querySelectorAll('.close-info').forEach(button => {
+  button.addEventListener('click', () => {
+    const box = button.closest('.info-box');
+    if (box) {
+      box.classList.replace('visible', 'hidden');
+      if (currentGroup) currentGroup.classList.remove('expanded');
+      currentBox = null;
+      currentGroup = null;
     }
-    if (currentGroup) {
-      currentGroup.classList.remove('expanded');
-    }
-
-    const poem = currentBox?.querySelector('.poem-container');
-    if (poem) poem.classList.remove('visible');
-
-    currentBox = null;
-    currentGroup = null;
   });
 });
 
@@ -150,3 +203,88 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
   createStars();
 });
+
+// 🌌 Animación de desbloqueo de Eos
+function triggerEosAnimation() {
+  const overlay = document.getElementById('eos-unlock-effect');
+  const eosMusic = document.getElementById('eos-music');
+
+  if (!overlay) return;
+
+  overlay.classList.remove('hidden');
+  overlay.classList.add('visible');
+
+  // Apagar música anterior y activar la nueva
+  if (audio && !audio.paused) audio.pause();
+  if (eosMusic) {
+    eosMusic.currentTime = 0;
+    eosMusic.volume = 0.6;
+    eosMusic.loop = true;
+    eosMusic.play().catch(() => {});
+  }
+
+  // Extra fugaces
+  spawnShootingStar();
+  setTimeout(spawnShootingStar, 500);
+  setTimeout(spawnShootingStar, 1000);
+
+  // Ocultar overlay
+  setTimeout(() => {
+    overlay.classList.remove('visible');
+    setTimeout(() => overlay.classList.add('hidden'), 1000);
+  }, 4000);
+}
+
+function generateTears() {
+  const container = document.querySelector("#eos-info .poem-container");
+  if (!container) return;
+
+  // Elimina anteriores si hay
+  container.querySelectorAll(".tear").forEach(t => t.remove());
+
+  for (let i = 0; i < 25; i++) {
+    const tear = document.createElement("div");
+    tear.classList.add("tear");
+    tear.style.left = `${Math.random() * 100}%`;
+    tear.style.animationDelay = `${Math.random() * 10}s`;
+    container.appendChild(tear);
+  }
+}
+
+function animatePoemLines() {
+  const poemContainer = document.querySelector("#eos-info .poem-container");
+  if (!poemContainer) return;
+
+  const paragraphs = poemContainer.querySelectorAll("p");
+  let globalDelay = 0; // <- acumulador global
+
+  paragraphs.forEach(paragraph => {
+    const nodes = Array.from(paragraph.childNodes);
+    const newNodes = [];
+
+    nodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const lines = node.textContent.trim().split("\n");
+        lines.forEach(line => {
+          if (line.trim() === "") return;
+          const span = document.createElement("span");
+          span.textContent = line.trim();
+          span.style.display = "block";
+          span.style.opacity = "0";
+          span.style.transform = "translateY(10px)";
+          span.style.animation = `lineFade 1.8s ease forwards`;
+          span.style.animationDelay = `${globalDelay}s`;
+          globalDelay += 2.0; // ← espacio entre líneas animadas
+          newNodes.push(span);
+        });
+      } else if (node.nodeName === "BR") {
+        globalDelay += 0.5;
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        newNodes.push(node);
+      }
+    });
+
+    paragraph.innerHTML = "";
+    newNodes.forEach(n => paragraph.appendChild(n));
+  });
+}
