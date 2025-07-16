@@ -155,15 +155,6 @@ svg {
   animation: fadeLine 0.6s ease forwards;
 }
 
-#poem-container.visible p:nth-child(1) { animation-delay: 0.4s; }
-#poem-container.visible p:nth-child(2) { animation-delay: 0.7s; }
-#poem-container.visible p:nth-child(3) { animation-delay: 1.0s; }
-#poem-container.visible p:nth-child(4) { animation-delay: 1.3s; }
-#poem-container.visible p:nth-child(5) { animation-delay: 1.6s; }
-#poem-container.visible p:nth-child(6) { animation-delay: 1.9s; }
-#poem-container.visible p:nth-child(7) { animation-delay: 2.2s; }
-#poem-container.visible p:nth-child(8) { animation-delay: 2.5s; }
-
 @keyframes fadeLine {
   to {
     opacity: 1;
@@ -196,4 +187,479 @@ svg {
 
 .hidden {
   display: none;
+}
+
+.star-group.hidden {
+  display: none;
+}
+.star-group.unlocked {
+  display: inline;
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px cyan); }
+  50% { filter: drop-shadow(0 0 10px white); }
+}
+
+.hint {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: cyan;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  animation: fadeInHint 2s ease 3s forwards;
+}
+
+@keyframes fadeInHint {
+  to { opacity: 0.75; }
+}
+
+.unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.8) 80%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+}
+
+.unlock-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.flash-circle {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, white, transparent);
+  animation: pulseFlash 2s ease-out forwards;
+  position: absolute;
+}
+
+@keyframes pulseFlash {
+  0% { transform: scale(0.2); opacity: 0.9; }
+  50% { transform: scale(1.8); opacity: 0.4; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.unlock-text {
+  font-size: 2rem;
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 15px cyan;
+  animation: zoomFade 2s ease-out forwards;
+}
+
+.eos-name {
+  color: cyan;
+  text-shadow: 0 0 10px white;
+}
+
+@keyframes zoomFade {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.95; }
+}
+
+.info-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  max-width: 600px;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: rgba(5, 10, 20, 0.9);
+  padding: 2rem;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 0 40px #00ffff44;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.info-box.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.info-box.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+body.transitioning #sky {
+  opacity: 0.2;
+  transition: opacity 0.5s ease;
+}
+
+@media (max-width: 500px) {
+  .info-box {
+    padding: 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* ---------------------- EOS ESTÉTICA ---------------------- */
+#eos-group {
+  filter: drop-shadow(0 0 12px #ff4fa9) drop-shadow(0 0 24px #ff82d1);
+  animation: eosGlow 2.5s ease-in-out infinite alternate;
+  transition: transform 0.3s ease;
+}
+
+#eos-group:hover {
+  transform: scale(1.1);
+}
+
+@keyframes eosGlow {
+  0% { filter: drop-shadow(0 0 10px #ff4fa9) drop-shadow(0 0 20px #ff82d1); }
+  100% { filter: drop-shadow(0 0 16px #ff71b2) drop-shadow(0 0 30px #ffc2eb); }
+}
+
+/* Caja especial Eos */
+#eos-info {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.1),
+    0 0 50px rgba(255, 200, 255, 0.08),
+    0 0 80px rgba(200, 200, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: radial-gradient(ellipse at center, #0a001a 0%, #000 80%);
+  color: #eee;
+  font-family: 'Georgia', serif;
+  text-shadow: 0 0 2px #ffb2dc;
+  width: 90%;
+  max-width: 650px;
+  z-index: 1000;
+  padding: 2rem;
+  border-radius: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease, transform 1.2s ease;
+  animation: eosGlowPulse 6s ease-in-out infinite alternate;
+}
+
+#eos-info::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-radial-gradient(circle, #ffffff11 1px, transparent 2px);
+  animation: particles 30s linear infinite;
+  opacity: 0.05;
+  z-index: 0;
+}
+
+#eos-info.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+#eos-info h2 {
+  font-size: 2.2rem;
+  color: #fff;
+  text-shadow: 0 0 10px white, 0 0 20px white;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+#eos-info p {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  margin-bottom: 1rem;
+  color: #ffeaf5;
+}
+
+#eos-info .poem-container p {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: eosFadeLine 0.8s ease forwards;
+  color: #ffffffcc;
+  text-shadow: 0 0 3px #ffffff44;
+  overflow: visible;
+  white-space: normal;
+  border: none;
+}
+
+#eos-info.visible .poem-container p {
+  animation-name: eosFadeLine;
+}
+
+@keyframes drip {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes eosFadeLine {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Contenedor invisible de partículas */
+#eos-info .poem-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-radial-gradient(circle, #ffffff11 1px, transparent 2px);
+  animation: particles 20s linear infinite;
+  opacity: 0.12;
+}
+
+/* Movimiento de las partículas */
+@keyframes particles {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100vh; }
+}
+
+#eos-info .poem-container {
+  border-left: none;
+  box-shadow: inset 2px 0 20px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tear {
+  position: absolute;
+  top: -20px;
+  width: 1px;
+  height: 60px;
+  background: linear-gradient(to bottom, #ffffff88, transparent);
+  opacity: 0.4;
+  animation: fallTear 10s linear infinite;
+  z-index: 0;
+}
+
+@keyframes fallTear {
+  0% { transform: translateY(0); opacity: 0.6; }
+  100% { transform: translateY(400px); opacity: 0; }
+}
+
+@keyframes lineFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#eos-info .poem-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1),
+              0 0 50px rgba(255, 255, 255, 0.1);
+}
+
+#eos-info p span {
+  font-size: 1.1rem;
+  color: #ffffff;
+  line-height: 1.7;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.12);
+}
+
+#eos-info h2 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 0 10px #fff;
+}
+
+#eos-info .poem-container p {
+  margin-bottom: 1.4rem;
+  width: 100%;
+}
+
+#eos-info .poem-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes eosGlowPulse {
+  0% {
+    box-shadow:
+      0 0 30px rgba(255, 255, 255, 0.07),
+      0 0 70px rgba(150, 150, 255, 0.05),
+      0 0 120px rgba(200, 100, 255, 0.04);
+  }
+  100% {
+    box-shadow:
+      0 0 40px rgba(255, 255, 255, 0.15),
+      0 0 100px rgba(255, 220, 255, 0.08),
+      0 0 160px rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Estrella especial Eos */
+.eos-star {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 30%, #ffb6ff 70%, transparent 100%);
+  box-shadow:
+    0 0 10px #ffd6ff,
+    0 0 25px #d3aaff,
+    0 0 40px #b29fff,
+    0 0 60px #8b66ff;
+  animation: eosPulse 3s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes eosPulse {
+  0% {
+    transform: scale(1);
+    box-shadow:
+      0 0 15px #ffd6ff,
+      0 0 35px #d3aaff,
+      0 0 50px #b29fff;
+  }
+  100% {
+    transform: scale(1.2);
+    box-shadow:
+      0 0 25px #fff0ff,
+      0 0 45px #debaff,
+      0 0 70px #9f7bff;
+  }
+}
+
+.eos-star.reveal {
+  animation: eosAppear 2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes eosAppear {
+  0% {
+    transform: scale(0.5) rotate(45deg);
+    opacity: 0;
+    filter: blur(10px);
+  }
+  60% {
+    transform: scale(1.5) rotate(0deg);
+    opacity: 1;
+    filter: blur(2px);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Estilo especial para la estrella Eos */
+#eos-group .star {
+  fill: #ffd6f9;
+  stroke: #ff78c7;
+  stroke-width: 2.5;
+  filter:
+    drop-shadow(0 0 6px #ff99cc)
+    drop-shadow(0 0 15px #ff61a6)
+    drop-shadow(0 0 25px #ff2289);
+  animation: pulseEos 1.8s infinite ease-in-out;
+  transform-origin: center center;
+  transform-box: fill-box;
+}
+
+@keyframes pulseEos {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.7;
+  }
+}
+
+@keyframes eosAppearEpic {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+    filter: brightness(2) saturate(3);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+  }
+}
+
+#eos-group.unlocked .star {
+  animation: eosAppearEpic 1.6s ease-out forwards, pulseEos 1.8s infinite ease-in-out;
+}
+
+/* Animación de aparición suave */
+#eos-group.revealed {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  animation: eosStarAppear 3.2s ease-out forwards;
+}
+
+@keyframes eosStarAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#eos-group {
+  transform-origin: center;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 1.5s ease, transform 1.5s ease;
+}
+
+#eos-group.unlocked {
+  opacity: 1;
+  transform: scale(1.3);
+  filter: drop-shadow(0 0 10px #ff5edb);
 }
