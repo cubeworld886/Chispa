@@ -11,41 +11,64 @@
 
 <div id="sky">
   <svg id="constellation" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-    <!-- Líneas -->
-    <line x1="700" y1="300" x2="650" y2="400" />
-    <line x1="650" y1="400" x2="500" y2="450" />
-    <line x1="500" y1="450" x2="550" y2="600" />
-    <line x1="550" y1="600" x2="700" y2="300" />
-    <line x1="550" y1="600" x2="600" y2="520" />
 
-    <!-- Estrellas con IDs para cada capítulo -->
-    <g class="star-group" id="vega-group">
-      <circle class="star" id="vega" cx="700" cy="300" r="8" />
-      <text class="label" x="710" y="295">Vega IV</text>
-    </g>
+<!-- Lira ilustración: queda DETRÁS de las estrellas -->
+<!-- Lira ilustración corregida (alineada con Vega) -->
+<g id="lyre-illustration"
+   transform="translate(470 110) translate(-170 100) rotate(-14) scale(0.80)"
+   style="pointer-events:none">
+  <image id="lyre-bg"
+         href="klipartz.com.png"
+         width="600"
+         height="900"
+         opacity="0.09"
+         preserveAspectRatio="xMidYMid meet" />
+</g>
 
-    <g class="star-group" id="zeta-group">
-      <circle class="star" cx="650" cy="400" r="5" />
-      <text class="label" x="660" y="395">Zeta Lyrae II</text>
-    </g>
+    <!-- Líneas (conexiones de Lyra) -->
+<svg id="constellation" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700">
 
-    <g class="star-group" id="sheliak-group" pointer-events="visible">
-      <circle class="star" cx="500" cy="450" r="6" />
-      <text class="label" x="510" y="445">Sheliak I</text>
-    </g>
+  <!-- Grupo general de la constelación -->
+  <g id="lyra-group" transform="rotate(-10 600 400)">
+    <!-- LÍNEAS -->
+<g id="lyra-group" transform="rotate(-10 600 400) translate(0, -100)">
+  <!-- LÍNEAS -->
+  <line x1="720" y1="190" x2="640" y2="270" />
+  <line x1="640" y1="270" x2="510" y2="360" />
+  <line x1="510" y1="360" x2="520" y2="640" />
+  <line x1="520" y1="640" x2="660" y2="580" />
+  <line x1="660" y1="580" x2="640" y2="270" />
 
-    <g class="star-group" id="sulafat-group" pointer-events="visible">
-      <circle class="star" cx="550" cy="600" r="6" />
-      <text class="label" x="560" y="595">Sulafat III</text>
-    </g>
+  <!-- ESTRELLAS -->
+  <g class="star-group" id="vega-group">
+    <circle class="star" id="vega" cx="720" cy="190" r="8" />
+    <text class="label" x="735" y="182">Vega</text>
+  </g>
 
-    <g class="star-group" id="delta-group" pointer-events="visible">
-      <circle class="star" cx="600" cy="520" r="5" />
-      <text class="label" x="610" y="515">Delta Lyrae V</text>
-    </g>
-    <g class="star-group hidden" id="eos-group">
-  <circle class="star" cx="480" cy="230" r="6" />
-  <text class="label" x="485" y="220">Altair</text>
+  <g class="star-group" id="zeta-group">
+    <circle class="star" cx="640" cy="270" r="5" />
+    <text class="label" x="650" y="262">Zeta Lyrae</text>
+  </g>
+
+  <g class="star-group" id="delta-group">
+    <circle class="star" cx="510" cy="360" r="5" />
+    <text class="label" x="480" y="352">Delta Lyrae</text>
+  </g>
+
+  <g class="star-group" id="sheliak-group">
+    <circle class="star" cx="660" cy="580" r="6" />
+    <text class="label" x="670" y="572">Sheliak</text>
+  </g>
+
+  <g class="star-group" id="sulafat-group">
+    <circle class="star" cx="520" cy="640" r="6" />
+    <text class="label" x="488" y="632">Sulafat</text>
+  </g>
+
+  <g class="star-group hidden" id="eos-group">
+    <circle class="star" cx="300" cy="230" r="6" />
+    <text class="label" x="305" y="220">Altair</text>
+  </g>
 </g>
   </svg>
 </div>
@@ -321,7 +344,7 @@
   <button class="close-info">×</button>
   <h2>Altair</h2>
   <div class="poem-container">
-       <p><strong>Si acaso vuelves</strong></p>
+    <p><strong>Si acaso vuelves</strong></p>
 
     <p>Si acaso vuelves,<br>
     que no sea por nostalgia,<br>
@@ -371,7 +394,7 @@
     ni forma de saber si algún día entenderás<br>
     todo lo que no supe decirte a tiempo.</p>
 
-    <p>Te amo en secreto,<br>
+    <p>Y te amo en secreto,<br>
     como se ama lo que el mundo ya dio por perdido.<br>
     Te amo en ese rincón del alma<br>
     donde uno no pone luz,<br>
@@ -412,48 +435,57 @@
     pero tampoco te olvida.</p>
 
     <p>Porque hay amores que no se disuelven:<br>
-    se entierran vivos,<br>
+    se entierran vivos<br>
     y gritan bajo tierra cada noche,<br>
     esperando que alguien los escuche.</p>
 
+    <p>Si no vuelves,<br>
+    también será verdad.<br>
+    Y no, no dejaré de quererte por eso.<br>
+    Solo aprenderé a amar tu ausencia<br>
+    como se aprende a vivir con un dolor<br>
+    que no tiene cura,<br>
+    pero se acomoda en el cuerpo<br>
+    como segunda piel.</p>
+
     <p>⸻</p>
 
-    <p>Y si nunca vuelves...<br>
-    si tu vida sigue<br>
-    y la mía también,<br>
-    pero por caminos que jamás vuelven a cruzarse…</p>
+    <p>Y si un día preguntan por ti,<br>
+    no fingiré fortaleza.<br>
+    Diré que fuiste un relámpago<br>
+    que no supe sostener en las manos.<br>
+    Una verdad demasiado viva<br>
+    para un hombre que aún temía a la luz.</p>
 
-    <p>Quiero que sepas esto:<br>
-    Fuiste mi herida más hermosa.<br>
-    La que no sangró hacia afuera,<br>
-    pero me vació por dentro.</p>
+    <p>⸻</p>
 
-    <p>Y cada vez que alguien me pregunte por ti,<br>
-    bajaré la mirada.<br>
-    No por vergüenza,<br>
-    sino porque nadie debería ver<br>
-    cómo se llora por alguien<br>
-    a quien ya no se puede nombrar en voz alta.</p>
+    <p>Y si me preguntan por mí,<br>
+    diré la única certeza que no he perdido:<br>
+    que aún te espero.<br>
+    No desde la esperanza ingenua,<br>
+    ni desde la fantasía de un regreso perfecto.<br>
+    Te espero como quien ya no cree en los finales felices,<br>
+    pero igual deja la puerta entreabierta,<br>
+    por si acaso el amor<br>
+    se atreve a volver.</p>
 
-    <p>No vas a volver,<br>
-    y está bien.<br>
-    No porque haya dejado de doler,<br>
-    sino porque aprendí a vivir con la grieta.</p>
+    <p>⸻</p>
 
-    <p>Pero si alguna vez vuelves,<br>
-    aunque sea tarde,<br>
-    aunque el mundo ya no nos nombre...<br>
-    yo voy a estar.<br>
-    No esperándote,<br>
-    sino existiendo.<br>
-    Con todas mis ruinas.<br>
-    Con todo mi amor.<br>
-    Y con la certeza más brutal de todas:</p>
+    <p>Y si vuelves,<br>
+    te voy a mirar de frente.<br>
+    No con reproches,<br>
+    ni con preguntas.<br>
+    Solo con la claridad<br>
+    de quien aún arde<br>
+    porque nunca dejó de nombrarte<br>
+    en la oscuridad.</p>
 
-    <p>Que nadie me dolió tan hondo,<br>
-    ni me habitó tan limpio,<br>
-    como tu.</p>
-    
+    <p>⸻</p>
+
+    <p>Y si no vuelves…<br>
+    que esta espera sea mi forma de amar<br>
+    lo que no volvió,<br>
+    pero nunca se fue.</p>
     <p>♡</p>
   </div>
 </div>
@@ -471,7 +503,7 @@
 </audio>
 
 <audio id="altair-music" src="Altair.mp3"></audio>
-<audio id="altair-music-2" src="Altair-2.mp3"></audio>
+<audio id="altair-music-2" src="tu-cancion-2.mp3"></audio>
 
 <script src="script.js"></script>
 </body>
