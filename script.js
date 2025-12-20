@@ -131,7 +131,7 @@ function unlockEosIfReady() {
   eosGroup.classList.remove("hidden");
   eosGroup.classList.add("unlocked");
   triggerEosAnimation();
-  setHint("Altair ha despertado. Ahora falta el puente.");
+  setHint("epaaa");
 }
 
 function unlockDenebIfReady() {
@@ -150,7 +150,7 @@ function unlockDenebIfReady() {
   }
 
   triggerDenebAnimation();
-  setHint("Si acaso vuelves… mira el puente.");
+  setHint("Hey, mira el puente!");
 }
 
 /* ---------------------- Animaciones de poema (línea por línea) ---------------------- */
