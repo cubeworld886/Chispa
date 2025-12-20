@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyra</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,11 +11,9 @@
 <canvas id="background"></canvas>
 
 <div id="sky">
-  <svg id="constellation" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
-
-<!-- Lira ilustración: queda DETRÁS de las estrellas -->
-<!-- Lira ilustración corregida (alineada con Vega) -->
-<g id="lyre-illustration"
+  <!-- Capa de ilustración (solo fondo, sin interacción) -->
+  <svg id="constellation-illustration" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <g id="lyre-illustration"
    transform="translate(470 110) translate(-170 100) rotate(-14) scale(0.80)"
    style="pointer-events:none">
   <image id="lyre-bg"
@@ -24,52 +23,57 @@
          opacity="0.09"
          preserveAspectRatio="xMidYMid meet" />
 </g>
+  </svg>
 
-    <!-- Líneas (conexiones de Lyra) -->
-<svg id="constellation" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700">
+  <!-- Capa interactiva (líneas + estrellas) -->
+  <svg id="constellation" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" preserveAspectRatio="xMidYMid meet" aria-label="Lyra y el Triángulo de Verano">
+    <g id="lyra-group" transform="rotate(-10 600 400) translate(0, -100)">
+      <!-- Conexiones de Lyra -->
+      <line x1="720" y1="190" x2="640" y2="270" />
+      <line x1="640" y1="270" x2="510" y2="360" />
+      <line x1="510" y1="360" x2="520" y2="640" />
+      <line x1="520" y1="640" x2="660" y2="580" />
+      <line x1="660" y1="580" x2="640" y2="270" />
 
-  <!-- Grupo general de la constelación -->
-  <g id="lyra-group" transform="rotate(-10 600 400)">
-    <!-- LÍNEAS -->
-<g id="lyra-group" transform="rotate(-10 600 400) translate(0, -100)">
-  <!-- LÍNEAS -->
-  <line x1="720" y1="190" x2="640" y2="270" />
-  <line x1="640" y1="270" x2="510" y2="360" />
-  <line x1="510" y1="360" x2="520" y2="640" />
-  <line x1="520" y1="640" x2="660" y2="580" />
-  <line x1="660" y1="580" x2="640" y2="270" />
+      <!-- El Triángulo de Verano (Vega – Deneb – Altair): aparece al final -->
+      <g id="summer-triangle" class="triangle hidden" pointer-events="none" aria-hidden="true">
+        <line class="triangle-line" x1="720" y1="190" x2="520" y2="150" />
+        <line class="triangle-line" x1="520" y1="150" x2="300" y2="230" />
+        <line class="triangle-line" x1="300" y1="230" x2="720" y2="190" />
+      </g>
 
-  <!-- ESTRELLAS -->
-  <g class="star-group" id="vega-group">
+      <!-- Estrellas -->
+      <g class="star-group" id="vega-group">
     <circle class="star" id="vega" cx="720" cy="190" r="8" />
     <text class="label" x="735" y="182">Vega</text>
   </g>
-
-  <g class="star-group" id="zeta-group">
+      <g class="star-group" id="zeta-group">
     <circle class="star" cx="640" cy="270" r="5" />
     <text class="label" x="650" y="262">Zeta Lyrae</text>
   </g>
-
-  <g class="star-group" id="delta-group">
+      <g class="star-group" id="delta-group">
     <circle class="star" cx="510" cy="360" r="5" />
     <text class="label" x="480" y="352">Delta Lyrae</text>
   </g>
-
-  <g class="star-group" id="sheliak-group">
+      <g class="star-group" id="sheliak-group">
     <circle class="star" cx="660" cy="580" r="6" />
     <text class="label" x="670" y="572">Sheliak</text>
   </g>
-
-  <g class="star-group" id="sulafat-group">
+      <g class="star-group" id="sulafat-group">
     <circle class="star" cx="520" cy="640" r="6" />
     <text class="label" x="488" y="632">Sulafat</text>
   </g>
-
-  <g class="star-group hidden" id="eos-group">
+      <g class="star-group hidden" id="eos-group">
     <circle class="star" cx="300" cy="230" r="6" />
     <text class="label" x="305" y="220">Altair</text>
   </g>
-</g>
+
+      <!-- Deneb (puente entre Vega y Altair) -->
+      <g class="star-group hidden" id="deneb-group">
+        <circle class="star star--small star--bridge" cx="520" cy="150" r="4.5" />
+        <text class="label label--small" x="530" y="142">Deneb</text>
+      </g>
+    </g>
   </svg>
 </div>
 
@@ -490,13 +494,271 @@
   </div>
 </div>
 
+
+
+<div id="deneb-info" class="info-box hidden">
+  <button class="close-info">×</button>
+  <h2>Deneb</h2>
+  <p class="subtitle">El puente entre <strong>Vega</strong> y <strong>Altair</strong>.</p>
+  <p class="whisper"></p>
+
+  <div id="deneb-gallery" class="gallery gallery--deneb" aria-label="Galería — Mi último respiro">
+    <figure class="gallery-item" data-index="0"><img src="suspiro_01.jpeg" alt="Recuerdo 1" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="1"><img src="suspiro_02.jpeg" alt="Recuerdo 2" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="2"><img src="suspiro_03.jpeg" alt="Recuerdo 3" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="3"><img src="suspiro_04.jpeg" alt="Recuerdo 4" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="4"><img src="suspiro_05.jpeg" alt="Recuerdo 5" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="5"><img src="suspiro_06.jpeg" alt="Recuerdo 6" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="6"><img src="suspiro_07.jpeg" alt="Recuerdo 7" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="7"><img src="suspiro_08.jpeg" alt="Recuerdo 8" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="8"><img src="suspiro_09.jpeg" alt="Recuerdo 9" loading="lazy"></figure>
+    <figure class="gallery-item" data-index="9"><img src="suspiro_10.jpeg" alt="Recuerdo 10" loading="lazy"></figure>
+  </div>
+
+  <div class="poem-container slow-reveal deneb-poem" data-gallery="deneb-gallery" data-target="258">
+    <p class="poem-title">Mi último respiro</p>
+
+    <p class="section-title">La primera vez que tu voz me encontró</p>
+
+    <p>No fue un milagro.<br>
+        Fue un sonido.<br>
+        Tu voz entrando por mi pecho<br>
+        como entra un perfume a una habitación cerrada:<br>
+        sin pedir permiso,<br>
+        sin romper nada…<br>
+        y aun así cambiándolo todo.</p>
+
+    <p>Yo ya traía el derrumbe en la lengua,<br>
+        pero esa noche<br>
+        me hablé como si estuviera completo.<br>
+        Sonreí —¿ves?—<br>
+        con la precisión de quien oculta un cadáver<br>
+        debajo de la alfombra.</p>
+
+    <p class="section-title">La calle mojada</p>
+
+    <p>Caminamos bajo lluvia ligera.<br>
+        Tu mano, tibia.<br>
+        Mi mente, un animal con hambre.</p>
+
+    <p>Las luces de los autos<br>
+        parecían santos cansados<br>
+        arrodillándose en los charcos.<br>
+        Yo quería prometerte futuro<br>
+        y solo tenía<br>
+        un presente con grietas invisibles<br>
+        y dientes apretados.</p>
+
+    <p>Te miré como se mira un refugio<br>
+        cuando uno ya viene ardiendo.</p>
+
+    <p class="section-title">Cielo en tu nombre</p>
+
+    <p>Tenías el cielo en los gestos,<br>
+        y yo quise llamarte hogar<br>
+        sin aprender primero a habitarme.</p>
+
+    <p>Te miraba dormir<br>
+        y el cuarto se llenaba de constelaciones pequeñas:<br>
+        tu cuello,<br>
+        tu clavícula,<br>
+        la sombra suave de tu pelo sobre la almohada<br>
+        como una promesa que no hacía ruido.</p>
+
+    <p>Yo te amé<br>
+        con ese amor que no sabe ser leve:<br>
+        un amor que empuja,<br>
+        que insiste,<br>
+        que cree que amar es salvar.</p>
+
+    <p>Y ahí empezó mi error:<br>
+        querer que tu luz<br>
+        hiciera el trabajo<br>
+        de mi sombra.</p>
+
+    <p class="section-title">La fotografía que nunca tomamos</p>
+
+    <p>Hubo un instante<br>
+        en que tu risa cayó sobre mi pecho<br>
+        como cae una moneda al fondo de un pozo:<br>
+        sonó,<br>
+        y yo supe<br>
+        que me estaba volviendo creyente.</p>
+
+    <p>Pero no guardé esa escena.<br>
+        La dejé pasar<br>
+        como se deja pasar el tren correcto<br>
+        por miedo a subirse<br>
+        con las manos sucias.</p>
+
+    <p>Ahora la memoria me castiga<br>
+        con lo único que sabe hacer bien:<br>
+        repetir lo que perdí<br>
+        hasta que duela igual que la primera vez.</p>
+
+    <p class="section-title">Tu perfume en mi ropa</p>
+
+    <p>Tu perfume en mi camiseta<br>
+        era una religión breve:<br>
+        me hacía bueno por minutos.</p>
+
+    <p>Y yo —hombre de culpa—<br>
+        usaba ese olor<br>
+        para tapar el humo que llevaba adentro.</p>
+
+    <p>Perdóname por esto:<br>
+        por haberte convertido en medicina<br>
+        sin preguntarte<br>
+        si querías serlo.<br>
+        Por haberte pedido paz<br>
+        con la desesperación de quien no se soporta.</p>
+
+    <p class="section-title">La noche en que me fui por dentro</p>
+
+    <p>No me fui de la casa.<br>
+        Me fui de mí.</p>
+
+    <p>Seguí hablando,<br>
+        seguí haciendo chistes,<br>
+        seguí diciendo “todo bien”,<br>
+        con la misma sonrisa pulida<br>
+        con la que se maquilla una herida.</p>
+
+    <p>Ojalá alguien hubiera notado<br>
+        que me estaba quebrando<br>
+        aunque sonaba alegre.<br>
+        Ojalá alguien hubiera visto<br>
+        el temblor diminuto<br>
+        detrás de mis dientes.</p>
+
+    <p>Yo era un edificio con música<br>
+        y los cimientos hechos polvo.</p>
+
+    <p class="section-title">El gesto que te cortó</p>
+
+    <p>No voy a nombrar detalles<br>
+        como si el detalle pudiera explicarme.</p>
+
+    <p>Solo esto:<br>
+        hubo un momento<br>
+        en que elegí lo fácil<br>
+        y lo fácil tenía filo.</p>
+
+    <p>Y te lo hundí<br>
+        sin gritar,<br>
+        sin sangre visible,<br>
+        con esa crueldad limpia<br>
+        que tienen los cobardes:<br>
+        la que deja todo “normal” por fuera<br>
+        para que nadie detenga la escena.</p>
+
+    <p>Desde entonces cargo una certeza:<br>
+        yo no fui un accidente.<br>
+        Yo fui una decisión.</p>
+
+    <p class="section-title">Tu mirada después</p>
+
+    <p>Tu mirada después<br>
+        no tenía odio:<br>
+        tenía la calma de lo irreversible.</p>
+
+    <p>Eso es peor.<br>
+        Porque el odio todavía conversa.<br>
+        La calma…<br>
+        es un portazo con guantes.</p>
+
+    <p>Me quedé frente a ti<br>
+        como quien sostiene una copa rota<br>
+        y pretende brindar.<br>
+        Y no supe.<br>
+        No supe sostener mi culpa sin convertirla en espectáculo.<br>
+        No supe pedir perdón sin ensuciar más.<br>
+        No supe ser humano<br>
+        sin usar la tragedia como abrigo.</p>
+
+    <p class="section-title">El año cerrándose</p>
+
+    <p>Diciembre cae<br>
+        como cae una sábana sobre un cuerpo:<br>
+        cubre,<br>
+        pero no cura.</p>
+
+    <p>Las fechas se alinean<br>
+        como dientes fríos.<br>
+        Los brindis suenan a metal.<br>
+        Y yo, en medio del ruido,<br>
+        solo escucho una cosa:<br>
+        mi propia mentira<br>
+        desmoronándose por fin.</p>
+
+    <p>Adiós, año.<br>
+        Te llevas mis disfraces,<br>
+        mis “ya estoy mejor”,<br>
+        mis sonrisas hechas a martillo.</p>
+
+    <p>Y adiós —qué palabra más dura—<br>
+        adiós a ese Getse<br>
+        que aprendió a ser agradable<br>
+        aunque se estuviera muriendo por dentro.</p>
+
+    <p class="section-title">Mi último respiro</p>
+
+    <p>No te escribo para que vuelvas.<br>
+        Te escribo para que no cargues<br>
+        con preguntas que no te pertenecen.</p>
+
+    <p>Si alguna vez te toqué el alma,<br>
+        que eso no se vuelva condena.<br>
+        Que lo bueno —si hubo—<br>
+        no sea rehén de lo peor que hice.</p>
+
+    <p>Mi último respiro<br>
+        no es un acto heroico.<br>
+        Es una rendición triste:<br>
+        la aceptación de que hay amores<br>
+        tan hondos<br>
+        que no se pueden reparar con intención,<br>
+        ni con poemas,<br>
+        ni con lágrimas bien pronunciadas.</p>
+
+    <p>Pero escucha esto, una sola vez:<br>
+        te amé de verdad.<br>
+        Y por eso duele como duele el hueso<br>
+        cuando lo llaman por su nombre.</p>
+
+    <p>Si el mundo guarda de mí<br>
+        solo la sombra que dejé al irme,<br>
+        que al menos tú sepas<br>
+        que yo también vi tu luz…<br>
+        y que fui tan torpe, tan humano, tan roto,<br>
+        que la confundí con salvación.</p>
+
+    <p>Cierro el año.<br>
+        Cierro la voz.<br>
+        Cierro esta vida como se cierra una puerta<br>
+        sin llave por dentro.</p>
+
+    <p>Y me quedo aquí,<br>
+        en el borde exacto de la noche,<br>
+        diciéndote sin consuelo, sin teatro, sin máscara:</p>
+
+    <p>adiós…<br>
+        y perdón.</p>
+  </div>
+</div>
+
+<div id="deneb-unlock-effect" class="unlock-overlay unlock-overlay--deneb hidden">
+  <div class="flash-circle"></div>
+  <div class="unlock-text"><span class="eos-name">Deneb</span></div>
+  <div class="unlock-subtext">El puente.</div>
+</div>
 <div id="eos-unlock-effect" class="unlock-overlay hidden">
   <div class="flash-circle"></div>
   <div class="unlock-text"><span class="eos-name">Altair</span></div>
 </div>
 
 <!-- Hint sutil -->
-<div id="hint" class="hint hidden">Cada estrella guarda una parte de lo que no dije. Visítalas todas.</div>
+<div id="hint" class="hint hidden">Hey! hay... algo nuevo?</div>
 
 <audio id="bg-music" preload="auto" loop>
   <source src="opciones.mp3" type="audio/mpeg">
@@ -504,6 +766,8 @@
 
 <audio id="altair-music" src="Altair.mp3"></audio>
 <audio id="altair-music-2" src="Altair-2.mp3" preload="Auto" loop></audio>
+<audio id="heavenly-music" src="Heavenly.mp3" preload="auto"></audio>
+
 
 <script src="script.js"></script>
 </body>
