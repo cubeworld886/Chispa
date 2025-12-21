@@ -47,7 +47,64 @@ let hintShown = false;
 const bgMusic = document.getElementById("bg-music");
 const altair1 = document.getElementById("altair-music");
 const altair2 = document.getElementById("altair-music-2");
-const heavenly = document.getElementById("heavenly-music");
+const denebPlayer = document.getElementById("deneb-player");
+
+/**
+ * Deneb: mini reproductor (se desbloquea al final del poema).
+ * Nota: los .mp3 son placeholders; tú los reemplazas con tus archivos.
+ */
+const DENEB_TRACKS = [
+  { title: "Hasta donde te quiero", src: "Hasta_donde_te_quiero.mp3" },
+  { title: "Those Eyes",            src: "Those_Eyes.mp3" },
+  { title: "Apocalypse",            src: "Apocalypse.mp3" },
+  { title: "Heavenly",              src: "Heavenly.mp3" },
+  { title: "Ever Forever",          src: "Ever_Forever.mp3" },
+  { title: "Compass",               src: "Compass.mp3" },
+  { title: "Mi Corazón",            src: "Mi_Corazon.mp3" },
+  { title: "Care For You",          src: "Care_For_You.mp3" },
+  { title: "Sanctuary",             src: "Sanctuary.mp3" },
+  { title: "Yellow",                src: "Yellow.mp3" }
+];
+const DENEB_DEFAULT_INDEX = 2; // Heavenly
+
+/* Persistencia Deneb (si ya acabó, no se reinicia al volver a entrar) */
+const DENEB_STATE_KEY = "chispa_deneb_state_v1";
+let denebState = { completed: false, musicUnlocked: false, lastTrackIndex: DENEB_DEFAULT_INDEX };
+
+try {
+  const saved = JSON.parse(localStorage.getItem(DENEB_STATE_KEY) || "null");
+  if (saved && typeof saved === "object") denebState = { ...denebState, ...saved };
+} catch (e) {}
+
+function saveDenebState() {
+  try {
+    localStorage.setItem(DENEB_STATE_KEY, JSON.stringify(denebState));
+  } catch (e) {}
+}
+
+let denebCurrentIndex = Number.isInteger(denebState.lastTrackIndex)
+  ? denebState.lastTrackIndex
+  : DENEB_DEFAULT_INDEX;
+
+/* UI del mini reproductor */
+const denebPanel = document.getElementById("deneb-music");
+const denebNowTitleEl = document.getElementById("deneb-now-title");
+const denebPlayBtn = document.getElementById("deneb-play");
+const denebPrevBtn = document.getElementById("deneb-prev");
+const denebNextBtn = document.getElementById("deneb-next");
+const denebTimeEl = document.getElementById("deneb-time");
+const denebDurEl = document.getElementById("deneb-duration");
+const denebProgressFill = document.getElementById("deneb-progress-fill");
+const denebProgress = document.querySelector("#deneb-music .progress");
+const denebTrackButtons = Array.from(document.querySelectorAll("#deneb-tracklist .track-btn"));
+
+function updateDenebNowPlaying(title) {
+  if (denebNowTitleEl) denebNowTitleEl.textContent = title;
+}
+
+function markActiveTrackButton(index) {
+  denebTrackButtons.forEach((b, i) => b.classList.toggle("is-active", i === index));
+}
 
 function isPlaying(a) {
   return !!(a && !a.paused && a.currentTime > 0);
@@ -68,15 +125,14 @@ function stopAndReset(a) {
 }
 
 function playBackgroundIfAllowed() {
-  // Reproduce la música de fondo solo si no hay otra activa
   if (!bgMusic) return;
-  if (isPlaying(altair1) || isPlaying(altair2) || isPlaying(heavenly)) return;
+  if (isPlaying(altair1) || isPlaying(altair2) || isPlaying(denebPlayer)) return;
   if (bgMusic.paused) safePlay(bgMusic, { volume: 0.55, loop: true });
 }
 
 function playAltair() {
   if (bgMusic && !bgMusic.paused) bgMusic.pause();
-  stopAndReset(heavenly);
+  stopAndReset(denebPlayer);
 
   if (altair2) {
     altair2.pause();
@@ -96,16 +152,125 @@ function playAltair() {
   }
 }
 
-function playHeavenly() {
+function formatTime(sec) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+function syncDenebProgress() {
+  if (!denebPlayer) return;
+  const d = isFinite(denebPlayer.duration) ? denebPlayer.duration : 0;
+  const t = isFinite(denebPlayer.currentTime) ? denebPlayer.currentTime : 0;
+
+  if (denebTimeEl) denebTimeEl.textContent = formatTime(t);
+  if (denebDurEl) denebDurEl.textContent = d ? formatTime(d) : "0:00";
+
+  if (denebProgressFill && d > 0) {
+    const pct = Math.max(0, Math.min(100, (t / d) * 100));
+    denebProgressFill.style.width = pct + "%";
+    if (denebProgress) denebProgress.setAttribute("aria-valuenow", String(Math.round(pct)));
+  } else if (denebProgressFill) {
+    denebProgressFill.style.width = "0%";
+  }
+}
+
+function syncDenebPlayButton() {
+  if (!denebPlayBtn || !denebPlayer) return;
+  denebPlayBtn.textContent = denebPlayer.paused ? "▶" : "❚❚";
+}
+
+function setDenebTrack(index, { autoplay = false, restart = true } = {}) {
+  if (!denebPlayer) return;
+
+  const safeIndex = Number.isInteger(index) ? index : DENEB_DEFAULT_INDEX;
+  const track = DENEB_TRACKS[safeIndex] || DENEB_TRACKS[DENEB_DEFAULT_INDEX];
+
+  denebCurrentIndex = safeIndex;
+  denebState.lastTrackIndex = safeIndex;
+  saveDenebState();
+
+  if (denebPlayer.getAttribute("data-src") !== track.src) {
+    denebPlayer.src = track.src;
+    denebPlayer.setAttribute("data-src", track.src);
+  }
+
+  if (restart) denebPlayer.currentTime = 0;
+  denebPlayer.loop = false;
+  denebPlayer.volume = 0.65;
+
+  updateDenebNowPlaying(track.title);
+  markActiveTrackButton(denebCurrentIndex);
+
+  if (autoplay) safePlay(denebPlayer);
+  syncDenebPlayButton();
+}
+
+function playDeneb({ forceHeavenly = false } = {}) {
   if (bgMusic && !bgMusic.paused) bgMusic.pause();
   stopAndReset(altair1);
   stopAndReset(altair2);
 
-  if (!heavenly) return;
-  heavenly.currentTime = 0;
-  // Importante: sin loop para que termine justo con la canción (4:18)
-  safePlay(heavenly, { volume: 0.65, loop: false });
+  const idx = forceHeavenly ? DENEB_DEFAULT_INDEX : denebCurrentIndex;
+  setDenebTrack(idx, { autoplay: true, restart: true });
 }
+
+function toggleDenebPlayPause() {
+  if (!denebPlayer) return;
+  if (denebPlayer.paused) safePlay(denebPlayer);
+  else denebPlayer.pause();
+  syncDenebPlayButton();
+}
+
+/* Inicializa listeners del reproductor (aunque esté bloqueado/oculto) */
+function initDenebPlayerUI() {
+  if (!denebPlayer) return;
+
+  // Botones
+  if (denebPlayBtn) denebPlayBtn.addEventListener("click", toggleDenebPlayPause);
+  if (denebPrevBtn) denebPrevBtn.addEventListener("click", () => {
+    const prev = (denebCurrentIndex - 1 + DENEB_TRACKS.length) % DENEB_TRACKS.length;
+    setDenebTrack(prev, { autoplay: true, restart: true });
+  });
+  if (denebNextBtn) denebNextBtn.addEventListener("click", () => {
+    const next = (denebCurrentIndex + 1) % DENEB_TRACKS.length;
+    setDenebTrack(next, { autoplay: true, restart: true });
+  });
+
+  // Lista
+  denebTrackButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.index);
+      setDenebTrack(idx, { autoplay: true, restart: true });
+    });
+  });
+
+  // Progreso (seek)
+  if (denebProgress) {
+    denebProgress.addEventListener("click", (e) => {
+      if (!isFinite(denebPlayer.duration) || denebPlayer.duration <= 0) return;
+      const rect = denebProgress.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      denebPlayer.currentTime = Math.max(0, Math.min(denebPlayer.duration, pct * denebPlayer.duration));
+      syncDenebProgress();
+    });
+  }
+
+  // Sync UI
+  denebPlayer.addEventListener("timeupdate", syncDenebProgress);
+  denebPlayer.addEventListener("loadedmetadata", syncDenebProgress);
+  denebPlayer.addEventListener("play", syncDenebPlayButton);
+  denebPlayer.addEventListener("pause", syncDenebPlayButton);
+  denebPlayer.addEventListener("ended", syncDenebPlayButton);
+
+  // Estado inicial
+  setDenebTrack(denebCurrentIndex, { autoplay: false, restart: false });
+  syncDenebProgress();
+  syncDenebPlayButton();
+}
+
+initDenebPlayerUI();
 
 /* ---------------------- Hint ---------------------- */
 function showHintOnce() {
@@ -131,7 +296,7 @@ function unlockEosIfReady() {
   eosGroup.classList.remove("hidden");
   eosGroup.classList.add("unlocked");
   triggerEosAnimation();
-  setHint("epaaa");
+  setHint("epaaaaa");
 }
 
 function unlockDenebIfReady() {
@@ -150,7 +315,7 @@ function unlockDenebIfReady() {
   }
 
   triggerDenebAnimation();
-  setHint("Hey, mira el puente!");
+  setHint("");
 }
 
 /* ---------------------- Animaciones de poema (línea por línea) ---------------------- */
@@ -218,6 +383,84 @@ function stopDenebSequence() {
     clearInterval(denebTick);
     denebTick = null;
   }
+}
+
+
+/* ---------------------- Deneb: persistencia + desbloqueo de extras ---------------------- */
+function hideDenebMusicPanel() {
+  if (!denebPanel) return;
+  if (denebState && denebState.musicUnlocked) return;
+
+  denebPanel.classList.add("hidden");
+  denebPanel.classList.remove("is-visible");
+  denebTrackButtons.forEach(b => b.classList.remove("is-visible", "is-active"));
+}
+
+function revealDenebMusicPanel({ instant = false } = {}) {
+  if (!denebPanel) return;
+
+  // Se queda desbloqueado para cuando cierres/abras Deneb
+  if (denebState) {
+    denebState.musicUnlocked = true;
+    saveDenebState();
+  }
+
+  denebPanel.classList.remove("hidden");
+  if (instant) {
+    denebPanel.classList.add("is-visible");
+    denebTrackButtons.forEach(b => b.classList.add("is-visible"));
+  } else {
+    requestAnimationFrame(() => denebPanel.classList.add("is-visible"));
+    denebTrackButtons.forEach((b, i) => setTimeout(() => b.classList.add("is-visible"), 85 * i));
+  }
+
+  markActiveTrackButton(denebCurrentIndex);
+}
+
+function markDenebCompleted() {
+  if (denebState && denebState.completed) {
+    // Si ya estaba, solo aseguramos visibilidad del panel
+    revealDenebMusicPanel({ instant: true });
+    return;
+  }
+
+  if (denebState) {
+    denebState.completed = true;
+    denebState.musicUnlocked = true;
+    saveDenebState();
+  }
+
+  const denebBox = document.getElementById("deneb-info");
+  if (denebBox) denebBox.classList.add("deneb-completed");
+
+  revealDenebMusicPanel({ instant: false });
+  setHint("Sorpresaaaaa");
+}
+
+/* Si Deneb ya fue “terminado”, no reiniciamos (poema, fotos, música ya quedan abiertos) */
+function applyDenebCompletedState(poemContainer) {
+  if (!poemContainer) return;
+
+  // Asegura líneas construidas (en caso de recarga)
+  let lines = Array.from(poemContainer.querySelectorAll(".reveal-line"));
+  if (!lines.length) {
+    ensureOriginalPoemHTML(poemContainer);
+    ({ lines } = buildDenebLines(poemContainer));
+  }
+  lines.forEach(l => l.classList.add("is-visible"));
+
+  // Asegura galería revelada
+  const galleryId = poemContainer.dataset.gallery;
+  const gallery = galleryId ? document.getElementById(galleryId) : null;
+  if (gallery) {
+    gallery.querySelectorAll(".gallery-item").forEach(it => it.classList.add("is-visible"));
+  }
+
+  const denebBox = document.getElementById("deneb-info");
+  if (denebBox) denebBox.classList.add("deneb-completed");
+
+  // Panel musical visible
+  revealDenebMusicPanel({ instant: true });
 }
 
 /**
@@ -311,7 +554,14 @@ function computeDenebTimeline(metas, { targetSeconds = 258, fadeSeconds = 1.65, 
     ["Me fui de mí.", 1.1],
     ["Eso es peor.", 1.0],
     ["Yo fui una decisión.", 1.3],
-    ["adiós…", 1.5]
+    ["adiós…", 1.5],
+    ["y perdón.", 1.0],
+
+    // Coda (Navidad / Año nuevo)
+    ["Te deseo una Navidad sin mí:", 1.25],
+    ["Que te encuentre la paz.", 1.05],
+    ["Feliz Navidad.", 1.0],
+    ["Feliz año nuevo.", 1.0]
   ]);
 
   const weights = [];
@@ -381,11 +631,13 @@ function startDenebSequence(poemContainer, audioEl) {
   if (!poemContainer) return;
 
   stopDenebSequence();
+  hideDenebMusicPanel(); // aún bloqueado mientras “escribe”
   ensureOriginalPoemHTML(poemContainer);
 
   const { metas, lines } = buildDenebLines(poemContainer);
   lines.forEach(l => l.classList.remove("is-visible"));
 
+  // Alineación al tiempo de la canción (4:18)
   let targetSeconds = Number(poemContainer.dataset.target) || 258;
   if (audioEl && isFinite(audioEl.duration) && audioEl.duration > 1) {
     targetSeconds = audioEl.duration;
@@ -413,10 +665,10 @@ function startDenebSequence(poemContainer, audioEl) {
   let preferAudio = !!audioEl;
 
   const timeNow = () => {
-    // Queremos estar “pegados” a la canción. Aunque esté en pausa al principio,
-    // currentTime sirve para esperar a que realmente arranque.
+    // Queremos estar “pegados” a la canción.
     if (preferAudio && audioEl && isFinite(audioEl.currentTime)) {
-      // Fallback: si por políticas del navegador la canción no arranca, no dejamos el poema en blanco.
+      // Fallback: si por políticas del navegador la canción no arranca,
+      // no dejamos el poema en blanco para siempre.
       if (audioEl.currentTime < 0.02 && (performance.now() - startedAt) > 1800) {
         preferAudio = false;
       } else {
@@ -426,7 +678,20 @@ function startDenebSequence(poemContainer, audioEl) {
     return (performance.now() - startedAt) / 1000;
   };
 
-  // Menos gasto que requestAnimationFrame: aquí solo necesitamos precisión “humana”.
+  let finalized = false;
+  const finalize = () => {
+    if (finalized) return;
+    finalized = true;
+
+    // Aseguramos que TODO quede visible
+    lines.forEach(l => l.classList.add("is-visible"));
+    items.forEach(it => it.classList.add("is-visible"));
+
+    stopDenebSequence();
+    markDenebCompleted();
+  };
+
+  // Menos gasto que requestAnimationFrame: precisión “humana”.
   denebTick = setInterval(() => {
     if (!denebActive) return;
 
@@ -442,19 +707,23 @@ function startDenebSequence(poemContainer, audioEl) {
       nextImg += 1;
     }
 
-    if (nextLine >= lines.length && nextImg >= Math.min(items.length, imageTimes.length)) {
-      stopDenebSequence();
+    const revealDone =
+      nextLine >= lines.length &&
+      nextImg >= Math.min(items.length, imageTimes.length);
+
+    // Importante: “termina” cuando el tiempo llega al final de la canción,
+    // para que el último texto “caiga” exactamente en 4:18.
+    if (revealDone && t >= targetSeconds) {
+      finalize();
     }
   }, 80);
 
   // Seguridad: si la canción termina y por alguna razón faltó algo, lo mostramos.
   if (audioEl) {
-    audioEl.addEventListener("ended", () => {
-      lines.forEach(l => l.classList.add("is-visible"));
-      items.forEach(it => it.classList.add("is-visible"));
-    }, { once: true });
+    audioEl.addEventListener("ended", finalize, { once: true });
   }
 }
+
 
 /* ---------------------- Apertura/cierre de cajas ---------------------- */
 function closeCurrentBox() {
@@ -483,7 +752,7 @@ function openStar(groupId, boxId) {
   const leavingDeneb = currentBox && currentBox.id === "deneb-info" && boxId !== "deneb-info";
   if (leavingDeneb) {
     stopDenebSequence();
-    stopAndReset(heavenly);
+    stopAndReset(denebPlayer);
   }
 
   showHintOnce();
@@ -522,7 +791,7 @@ function openStar(groupId, boxId) {
   if (groupId === EOS_ID) {
     playAltair();
   } else if (groupId === DENEB_ID) {
-    playHeavenly();
+    playDeneb({ forceHeavenly: true });
   } else {
     playBackgroundIfAllowed();
   }
@@ -535,7 +804,12 @@ function openStar(groupId, boxId) {
   }
 
   if (groupId === DENEB_ID && poem) {
-    startDenebSequence(poem, heavenly);
+    // Si ya se completó Deneb, NO reiniciamos: queda como carta abierta + galería + reproductor.
+    if (denebState && denebState.completed) {
+      applyDenebCompletedState(poem);
+    } else {
+      startDenebSequence(poem, denebPlayer);
+    }
   }
 }
 
@@ -557,7 +831,7 @@ document.querySelectorAll(".close-info").forEach(btn => {
     // Si cierras Deneb, vuelve a la música de fondo (si no estás en Altair)
     if (closingDeneb) {
       stopDenebSequence();
-      stopAndReset(heavenly);
+      stopAndReset(denebPlayer);
       playBackgroundIfAllowed();
     }
   });
