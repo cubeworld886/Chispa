@@ -33,17 +33,21 @@ const slowLamentBlinkOpen = (age) => {
 };
 const lamentBreathPulse = (age) => {
     const cycleSeconds = 7.4;
-    const segment = Math.floor(Math.max(0, age) / cycleSeconds);
-    const local = (Math.max(0, age) - segment * cycleSeconds) / cycleSeconds;
+    // A slow phase drift keeps each breath distinct while retaining the
+    // inhale / held breath / longer exhale from the POS character.
+    const breathAge = Math.max(0, age + Math.sin(age * .115) * .32 + Math.sin(age * .047) * .17);
+    const segment = Math.floor(breathAge / cycleSeconds);
+    const local = (breathAge - segment * cycleSeconds) / cycleSeconds;
+    const depth = .82 + hash01(segment + 605) * .28;
     const inhaleEnd = .235 + hash01(segment + 601) * .035;
     const holdEnd = inhaleEnd + .045 + hash01(segment + 602) * .035;
     const exhaleEnd = .60 + hash01(segment + 603) * .055;
     const pauseEnd = .82 + hash01(segment + 604) * .06;
-    if (local < inhaleEnd) return smoothstep(local / inhaleEnd);
-    if (local < holdEnd) return .94;
-    if (local < exhaleEnd) return .94 - smoothstep((local - holdEnd) / (exhaleEnd - holdEnd)) * 1.34;
-    if (local < pauseEnd) return -.40;
-    return -.40 + smoothstep((local - pauseEnd) / (1 - pauseEnd)) * .40;
+    if (local < inhaleEnd) return smoothstep(local / inhaleEnd) * depth;
+    if (local < holdEnd) return .94 * depth;
+    if (local < exhaleEnd) return (.94 - smoothstep((local - holdEnd) / (exhaleEnd - holdEnd)) * 1.34) * depth;
+    if (local < pauseEnd) return -.40 * depth;
+    return (-.40 + smoothstep((local - pauseEnd) / (1 - pauseEnd)) * .40) * depth;
 };
 const lamentBlinkOpen = (age, offset = 0) => {
     const localAge = Math.max(0, age + offset);
@@ -1106,31 +1110,33 @@ export function samplePose(o) {
             const release = reducedMotion ? 1 : smoothstep(age / 2.8);
             const settling = reducedMotion ? 0 : Math.sin(age * 6.4) * Math.exp(-age * 2.8);
             const breathPulse = reducedMotion ? 0 : lamentBreathPulse(age);
-            const breathMotion = reducedMotion ? 0 : breathPulse * .0011;
             const deepExhale = reducedMotion ? 0 : oneShot(age, 2.55, .16, .90);
             const gesture = reducedMotion ? 0 : curiosity;
             const leftBlink = reducedMotion ? 1 : lamentBlinkOpen(age);
             const rightBlink = reducedMotion ? 1 : lamentBlinkOpen(age, .07);
             return pose({
-                bodyScaleX: 1 - breathPulse * .004,
-                bodyScaleY: 1 + breathPulse * .009,
-                bodyPuff: .10 + breathPulse * .18,
-                bodyPinch: .018 + breathPulse * .030,
-                bodyBend: resolvedGaze.x * .040 + gesture * .012 + settling * .012,
-                bodyWave: breathPulse * .012,
+                bodyScaleX: 1.007 - breathPulse * .008 - deepExhale * .003,
+                bodyScaleY: .989 + breathPulse * .013 - deepExhale * .005,
+                bodyPuff: .20 + breathPulse * .12 - deepExhale * .035,
+                bodyPinch: -.095 + breathPulse * .025,
+                bodyBend: -.075 + resolvedGaze.x * .042 + gesture * .022 + settling * .018,
+                bodyWave: breathPulse * .008,
                 bodyWavePhase: t * .78,
-                bodyRotation: -.026 + release * .013 + settling * .0035 + breathMotion + deepExhale * .001,
-                bodyDy: -.004 + release * .010 + breathMotion + deepExhale * .002 + settling * .001 + gesture * .001,
-                leftEyeOpen: clamp((.56 - release * .025) * leftBlink, .05, .68),
-                rightEyeOpen: clamp((.60 - release * .025) * rightBlink, .05, .72),
-                leftEyeRotation: -.018,
-                rightEyeRotation: .014,
-                leftEyeSmile: -.38,
-                rightEyeSmile: -.34,
-                leftEyeDy: breathPulse * .0009,
-                rightEyeDy: breathPulse * .0011,
-                eyeGlow: .84,
-                gaze: hasUserGaze ? userGaze : vec(.03, .20 + release * .02),
+                bodyRotation: -.027 + release * .007 + settling * .004 + breathPulse * .001,
+                bodyDy: .003 + release * .009 - breathPulse * .003 + deepExhale * .004 + settling * .0015 + gesture * .001,
+                faceDepth: .25,
+                leftEyeOpen: clamp((.62 - release * .035) * leftBlink, .05, .70),
+                rightEyeOpen: clamp((.65 - release * .035) * rightBlink, .05, .73),
+                leftEyeScaleX: 1.12,
+                rightEyeScaleX: 1.12,
+                leftEyeRotation: -.045,
+                rightEyeRotation: .042,
+                leftEyeSmile: -.67,
+                rightEyeSmile: -.64,
+                leftEyeDy: .004 + breathPulse * .0012,
+                rightEyeDy: .004 + breathPulse * .0014,
+                eyeGlow: .79,
+                gaze: hasUserGaze ? userGaze : vec(.02, .16 + release * .035),
                 orbitRotation: 0,
                 orbitOpacity: .34,
                 glow: .92,

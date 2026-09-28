@@ -18,38 +18,23 @@
   pointer-events: none;
 }
 
-.cosmic-loader__action {
+.cosmic-loader__mark {
   display: grid;
   place-items: center;
   width: 28px;
   height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
   color: rgba(222, 204, 255, .74);
-  background: transparent;
-  cursor: pointer;
   animation: lyra-loader-pulse 2.8s ease-in-out infinite;
-  transition: color .18s ease, opacity .18s ease;
 }
 
-.cosmic-loader__action:focus-visible {
-  color: #f0e7ff;
-  outline: none;
-}
-
-.cosmic-loader__action[disabled] {
-  cursor: default;
-}
-
-.cosmic-loader__action svg {
+.cosmic-loader__mark svg {
   display: block;
   width: 22px;
   height: 22px;
   overflow: visible;
 }
 
-.cosmic-loader__action path {
+.cosmic-loader__mark path {
   fill: none;
   stroke: currentColor;
   stroke-width: 1.1;
@@ -58,10 +43,60 @@
   opacity: .55;
 }
 
-.cosmic-loader__action circle {
+.cosmic-loader__mark circle {
   fill: currentColor;
   filter: drop-shadow(0 0 2px rgba(205, 174, 255, .65));
 }
+
+.cosmic-loader__action {
+  position: absolute;
+  top: calc(50% + 39px);
+  left: 50%;
+  min-width: 85px;
+  padding: 9px 18px 8px;
+  border: 1px solid rgba(204, 177, 244, .33);
+  border-radius: 999px;
+  background: rgba(134, 95, 177, .09);
+  color: rgba(232, 218, 252, .90);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: .19em;
+  text-indent: .19em;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 5px);
+  transition: opacity .24s ease, transform .24s ease, background .18s ease, border-color .18s ease, visibility 0s linear .24s;
+}
+
+#cosmic-loader[data-state="ready"] .cosmic-loader__action,
+#cosmic-loader[data-state="error"] .cosmic-loader__action {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+
+.cosmic-loader__action:hover {
+  background: rgba(145, 106, 193, .17);
+  border-color: rgba(218, 194, 250, .56);
+}
+
+.cosmic-loader__action:active {
+  background: rgba(166, 119, 212, .21);
+  transform: translate(-50%, 1px) scale(.97);
+}
+
+.cosmic-loader__action:focus-visible {
+  outline: 1px solid rgba(227, 208, 251, .68);
+  outline-offset: 4px;
+}
+
+.cosmic-loader__action[disabled] { cursor: default; }
 
 @keyframes lyra-loader-pulse {
   0%, 100% { opacity: .58; transform: scale(.96); }

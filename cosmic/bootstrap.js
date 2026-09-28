@@ -124,7 +124,9 @@ export function installCosmicBootstrap({ createController, onProgress = () => {}
         // Preserve transient user activation in iOS Safari for AudioContext.resume()
         // and HTMLMediaElement.play(); do this before the first await in this handler.
         resolvedController?.primeStartGesture?.();
-        const controller = await ensurePreloaded();
+        // READY already owns the prepared controller. Keep the first visual frame
+        // on this same activation turn instead of inserting a preload microtask.
+        const controller = resolvedController;
         if (!controller || disposed) return false;
         emit('starting');
         controller.arm?.();
@@ -168,7 +170,7 @@ export function resolveCosmicSiteRoot(moduleUrl = import.meta.url) {
   return new URL('../', moduleUrl).href;
 }
 
-const PREPARATION_DIAGNOSTIC_VERSION = '20260928m';
+const PREPARATION_DIAGNOSTIC_VERSION = '20260928n';
 
 export function createCosmicLayer(doc = globalThis.document) {
   const existing = doc?.querySelector?.('#cosmic-event-layer');
@@ -216,7 +218,8 @@ function createLoaderView(doc) {
       root.setAttribute('aria-busy', String(stage !== 'ready' && stage !== 'error'));
       const retrying = stage === 'error';
       action.disabled = !retrying && stage !== 'ready';
-      action.setAttribute('aria-label', retrying ? 'Reintentar preparación' : 'Iniciar experiencia');
+      action.textContent = retrying ? 'REINTENTAR' : 'ENTRAR';
+      action.setAttribute('aria-label', retrying ? 'Reintentar preparación' : 'Entrar');
       action.dataset.mode = retrying ? 'retry' : 'start';
     },
   };
@@ -232,18 +235,7 @@ export function installProductionCosmicBootstrap({
   const loader = createLoaderView(doc);
   let bootstrap;
   bootstrap = installCosmicBootstrap({
-    onProgress: (stage) => {
-      loader?.update(stage);
-      if (stage === 'ready') {
-        void bootstrap.preload().then(async (controller) => {
-          try {
-            if (await controller?.canStartAutomatically?.()) void bootstrap.start();
-          } catch (error) {
-            console.info('[BOOT] audio requires a start gesture', error?.name ?? error?.message ?? error);
-          }
-        });
-      }
-    },
+    onProgress: (stage) => loader?.update(stage),
     createController: async () => {
       const layer = createCosmicLayer(doc);
       const runtimeUrl = new URL(`./production-runtime.js?prepdiag=${PREPARATION_DIAGNOSTIC_VERSION}`, moduleUrl).href;
@@ -267,8 +259,13 @@ export function installProductionCosmicBootstrap({
   });
 
   loader?.action?.addEventListener?.('click', () => {
-    if (bootstrap.status === 'error') void bootstrap.retry();
-    else void bootstrap.start();
+    if (bootstrap.status === 'error') {
+      loader.action.disabled = true;
+      void bootstrap.retry();
+    } else if (bootstrap.status === 'ready' && !loader.action.disabled) {
+      loader.action.disabled = true;
+      void bootstrap.start();
+    }
   });
   return bootstrap;
 }

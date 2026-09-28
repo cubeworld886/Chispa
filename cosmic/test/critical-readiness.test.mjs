@@ -65,7 +65,7 @@ test('bootstrap includes the last preparation stage with the original failure', 
   assert.equal(failure.detail.error, rootError);
 });
 
-test('the loader stays free of visible text when runtime preparation fails', async () => {
+test('the loader keeps only its retry action visible when runtime preparation fails', async () => {
   const status = { textContent: '' };
   const diagnostic = { hidden: true, textContent: '' };
   const action = { disabled: true, textContent: '', dataset: {}, setAttribute() {}, addEventListener() {} };
@@ -106,7 +106,7 @@ test('the loader stays free of visible text when runtime preparation fails', asy
   assert.equal(status.textContent, '');
   assert.equal(diagnostic.hidden, true);
   assert.equal(diagnostic.textContent, '');
-  assert.equal(action.textContent, '');
+  assert.equal(action.textContent, 'REINTENTAR');
   assert.equal(loader.dataset.state, 'error');
 });
 

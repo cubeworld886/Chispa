@@ -25,12 +25,12 @@
     }
   </style>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="cosmic/cosmic.css?prepdiag=20260928i">
+  <link rel="stylesheet" href="cosmic/cosmic.css?prepdiag=20260928n">
 </head>
 <body>
 
 <div id="cosmic-loader" class="cosmic-loader" data-state="boot" role="status" aria-label="Lyra" aria-busy="true">
-  <button class="cosmic-loader__action" type="button" data-loader-action aria-label="Preparando Lyra" disabled>
+  <div class="cosmic-loader__mark" aria-hidden="true">
     <svg viewBox="0 0 28 28" aria-hidden="true">
       <path d="M5 18 11 7l7 4 5-7M11 7l3 15 4-11" />
       <circle cx="5" cy="18" r="1.25" />
@@ -39,7 +39,8 @@
       <circle cx="23" cy="4" r="1.45" />
       <circle cx="14" cy="22" r="1.1" />
     </svg>
-  </button>
+  </div>
+  <button class="cosmic-loader__action" type="button" data-loader-action aria-label="Entrar" disabled>ENTRAR</button>
 </div>
 
 <canvas id="background"></canvas>
@@ -872,7 +873,7 @@
 
 
 <script src="script.js"></script>
-<script type="module" src="cosmic/bootstrap.js?prepdiag=20260928m"></script>
+<script type="module" src="cosmic/bootstrap.js?prepdiag=20260928n"></script>
 </body>
 </html>
 

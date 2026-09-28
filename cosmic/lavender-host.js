@@ -153,8 +153,10 @@ export class ChispaLavenderHost {
 
   lookAtWorldPoint(x, y, options = {}) {
     if (!this.engine) return;
+    const griefGaze = this.engine.state === 'lament';
     if (options.normalized) {
-      this.engine.setCinematicGaze(clamp((x - 0.5) * 1.5), clamp((y - 0.5) * 1.5));
+      const range = griefGaze ? 0.54 : 1;
+      this.engine.setCinematicGaze(clamp((x - 0.5) * 1.5, -range, range), clamp((y - 0.5) * 1.5, -range, range));
       return;
     }
     const rect = this.engine.getActorScreenRect?.();
@@ -163,11 +165,11 @@ export class ChispaLavenderHost {
     const cy = rect.top + rect.height / 2;
     const nx = clamp((x - cx) / Math.max(80, rect.width * 0.9));
     const ny = clamp((y - cy) / Math.max(80, rect.height * 0.9));
-    this.engine.setCinematicGaze(nx, ny);
+    this.engine.setCinematicGaze(griefGaze ? clamp(nx, -.54, .54) : nx, griefGaze ? clamp(ny, -.54, .54) : ny);
   }
 
   lookDown() {
-    this.engine?.setCinematicGaze(0, 0.70);
+    this.engine?.setCinematicGaze(0, 0.42);
   }
 
   inspectionOffsetForWorldPoint(x, y) {

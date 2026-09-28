@@ -2,7 +2,7 @@ import { crescentPath, orbitCenter, orbitRotationDeg, orbitRx, orbitRy, star0Cen
 import { POS_FRONT_BODY, POS_TAKEOFF_BODY, POS_ANTICIPATION_BODY, POS_BRAKE_BODY, POS_LAND_BODY, POS_SQUASH_BODY, POS_BOUNCE_BODY, POS_SETTLE_BODY, POS_FRONT_EYES, POS_TAKEOFF_EYES, POS_ANTICIPATION_EYES, POS_BRAKE_EYES, POS_LAND_EYES, POS_SQUASH_EYES, POS_BOUNCE_EYES, POS_SETTLE_EYES, POS_FRONT_SEAM, POS_FRONT_PETAL, POS_BRAKE_SEAM, POS_BRAKE_PETAL, POS_LAND_SEAM, POS_LAND_PETAL, POS_SQUASH_SEAM, POS_SQUASH_PETAL, POS_BOUNCE_SEAM, POS_BOUNCE_PETAL, POS_SETTLE_SEAM, POS_SETTLE_PETAL, POS_IDENTITY_MATRIX, POS_TAKEOFF_MATRIX, POS_ANTICIPATION_MATRIX, POS_BRAKE_MATRIX, POS_LAND_MATRIX, POS_SQUASH_MATRIX, POS_BOUNCE_MATRIX, POS_SETTLE_MATRIX, WEB_PROFILE_BODY, WEB_PROFILE_ACCEL_BODY, WEB_ARC_BODY, WEB_HERO_APPROACH_BODY, WEB_PROFILE_EYE, WEB_PROFILE_ACCEL_EYE, WEB_ARC_EYE, WEB_HERO_APPROACH_EYE } from '../geometry/posWebIdentity.js';
 import { lavenderMaterialManifest } from '../materials/materialManifest.js';
 import { materialMorphPoints, morphEyePoints, morphRidgePoints, morphInfluence, resampleClosed, resampleOpen, warpBodyPoint } from '../geometry/morphGeometry.js';
-import { basePose, lerpPose, samplePose } from '../core/motion.js';
+import { basePose, lerpPose, samplePose } from '../core/motion.js?prepdiag=20260928n';
 import { defaultLavenderSceneMotion } from '../core/types.js';
 import { resolveLavenderPerformance } from '../performance/LavenderPerformanceGovernor.js';
 import { C11_FRONT_SEAM, C11_FRONT_PETAL, C11_FRONT_HIGHLIGHT, C11_TAKEOFF_HIGHLIGHT, C11_ANTICIPATION_SEAM, C11_ANTICIPATION_PETAL, C11_ANTICIPATION_HIGHLIGHT, C11_PROFILE_RIM, C11_PROFILE_UNDER_RIM, C11_PROFILE_HIGHLIGHT, C11_PROFILE_ACCEL_RIM, C11_PROFILE_ACCEL_UNDER_RIM, C11_PROFILE_ACCEL_HIGHLIGHT, C11_ARC_RIM, C11_ARC_UNDER_RIM, C11_ARC_HIGHLIGHT, C11_HERO_APPROACH_RIM, C11_HERO_APPROACH_UNDER_RIM, C11_HERO_APPROACH_HIGHLIGHT, C11_BRAKE_HIGHLIGHT, C11_LAND_HIGHLIGHT, C11_SQUASH_HIGHLIGHT, C11_BOUNCE_HIGHLIGHT, C11_SETTLE_HIGHLIGHT, C11_FRONT_SHADOW, C11_TAKEOFF_SHADOW, C11_ANTICIPATION_SHADOW, C11_PROFILE_ACCEL_SHADOW, C11_ARC_SHADOW, C11_HERO_APPROACH_SHADOW, C11_BRAKE_SHADOW, C11_LAND_SHADOW, C11_SQUASH_SHADOW, C11_BOUNCE_SHADOW, C11_SETTLE_SHADOW, C11_FRONT_MATERIAL, C11_TAKEOFF_MATERIAL, C11_ANTICIPATION_MATERIAL, C11_PROFILE_MATERIAL, C11_PROFILE_ACCEL_MATERIAL, C11_ARC_MATERIAL, C11_HERO_APPROACH_MATERIAL, C11_BRAKE_MATERIAL, C11_LAND_MATERIAL, C11_SQUASH_MATERIAL, C11_BOUNCE_MATERIAL, C11_SETTLE_MATERIAL, } from '../svg/keyframeGeometry.js';
@@ -606,11 +606,12 @@ export class LavenderSvgEngine {
         this.travel = { ...this.targetTravel };
     }
     else {
-        const g = 1 - Math.exp(-dt * (this.cinematicPerformance ? 12 : 11));
+        const grieving = this.cinematicPerformance && this.state === 'lament';
+        const g = 1 - Math.exp(-dt * (grieving ? 4.8 : this.cinematicPerformance ? 12 : 11));
         this.gazeX += (this.targetGazeX - this.gazeX) * g;
         this.gazeY += (this.targetGazeY - this.gazeY) * g;
         if (this.cinematicPerformance) {
-            const targetHeadTurn = clamp(this.targetGazeX * .125, -.125, .125);
+            const targetHeadTurn = clamp((grieving ? this.gazeX : this.targetGazeX) * .125, -.125, .125);
             this.headTurnVelocity += (targetHeadTurn - this.headTurn) * 46 * dt;
             this.headTurnVelocity *= Math.exp(-10.8 * dt);
             this.headTurn = clamp(this.headTurn + this.headTurnVelocity * dt, -.14, .14);
@@ -710,7 +711,7 @@ export class LavenderSvgEngine {
         this.underRim.setAttribute('opacity', String(clamp(shape.underRimAlpha * bodyAlpha * .72)));
         // Keep the approved silhouette as authority. Lament breathing affects only the body contour;
         // the registered eyes follow a small fraction of that expansion to stay seated in the face.
-        const cinematicStatic = this.cinematicLock && !this.cinematicPerformance && !storyboardLocked, breathing = this.cinematicPerformance && this.state === 'lament', bodyScaleX = breathing ? clamp(p.bodyScaleX, .994, 1.006) : 1, bodyScaleY = breathing ? clamp(p.bodyScaleY, .988, 1.012) : 1, eyeScaleX = 1 + (bodyScaleX - 1) * .28, eyeScaleY = 1 + (bodyScaleY - 1) * .32, roll = storyboardLocked || cinematicStatic ? 0 : clamp(p.bodyRotation + this.travel.roll + (this.cinematicPerformance ? this.headTurn * .14 : 0), -.060, .060), dx = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDx + this.gazeX * .002) * 1000, -7, 7), dy = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDy - this.travel.lift * .055) * 1000, -11, 11);
+        const cinematicStatic = this.cinematicLock && !this.cinematicPerformance && !storyboardLocked, breathing = this.cinematicPerformance && this.state === 'lament', bodyScaleX = breathing ? clamp(p.bodyScaleX, .982, 1.018) : 1, bodyScaleY = breathing ? clamp(p.bodyScaleY, .976, 1.020) : 1, eyeScaleX = 1 + (bodyScaleX - 1) * .28, eyeScaleY = 1 + (bodyScaleY - 1) * .32, roll = storyboardLocked || cinematicStatic ? 0 : clamp(p.bodyRotation + this.travel.roll + (this.cinematicPerformance ? this.headTurn * .14 : 0), -.060, .060), dx = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDx + this.gazeX * .002) * 1000, -7, 7), dy = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDy - this.travel.lift * .055) * 1000, -11, 11);
         const bodyTransform = `translate(${500 + dx} ${515 + dy}) rotate(${roll * 57.2958}) scale(${bodyScaleX} ${bodyScaleY}) translate(-500 -515)`;
         const faceTransform = `translate(${500 + dx} ${515 + dy}) rotate(${roll * 57.2958}) scale(${eyeScaleX} ${eyeScaleY}) translate(-500 -515)`;
         this.bodyGroup.setAttribute('transform', bodyTransform);

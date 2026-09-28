@@ -53,20 +53,28 @@ function makeFixture({ coarsePointer = false, autoplayAllowed = true } = {}) {
   return { bootstrap, loader, action, status, diagnostic, listeners, get starts() { return starts; }, get gestures() { return gestures; } };
 }
 
-test('desktop starts as soon as critical preparation reaches READY without loader copy', async () => {
+test('desktop waits at READY for ENTRAR even when autoplay would be allowed', async () => {
   const fixture = makeFixture();
   await fixture.bootstrap.preload();
   await new Promise((resolve) => setImmediate(resolve));
 
-  assert.equal(fixture.starts, 1);
-  assert.equal(fixture.bootstrap.status, 'started');
-  assert.equal(fixture.loader.dataset.state, 'started');
+  assert.equal(fixture.starts, 0);
+  assert.equal(fixture.bootstrap.status, 'ready');
+  assert.equal(fixture.loader.dataset.state, 'ready');
+  assert.equal(fixture.action.disabled, false);
+  assert.equal(fixture.action.textContent, 'ENTRAR');
   assert.equal(fixture.status.textContent, '');
   assert.equal(fixture.diagnostic.textContent, '');
-  assert.equal(fixture.action.textContent, '');
+
+  fixture.listeners.get('click')();
+  fixture.listeners.get('click')();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(fixture.gestures, 1);
+  assert.equal(fixture.starts, 1);
+  assert.equal(fixture.bootstrap.status, 'started');
 });
 
-test('blocked autoplay leaves only the symbol active until the real start gesture', async () => {
+test('mobile also waits for the same start gesture', async () => {
   const fixture = makeFixture({ coarsePointer: true, autoplayAllowed: false });
   await fixture.bootstrap.preload();
   await new Promise((resolve) => setImmediate(resolve));
@@ -75,7 +83,7 @@ test('blocked autoplay leaves only the symbol active until the real start gestur
   assert.equal(fixture.bootstrap.status, 'ready');
   assert.equal(fixture.action.hidden, false);
   assert.equal(fixture.action.disabled, false);
-  assert.equal(fixture.action.textContent, '');
+  assert.equal(fixture.action.textContent, 'ENTRAR');
   assert.equal(fixture.status.textContent, '');
 
   fixture.listeners.get('click')();
