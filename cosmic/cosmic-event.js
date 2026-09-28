@@ -1,4 +1,4 @@
-import { completedProgressFor, IDLE_SECONDS, LAVENDER_REVEAL_SECONDS, MUSIC_CUE_SECONDS, phaseAt, samplePhaseWindows } from './timeline.js?prepdiag=20260928g';
+import { completedProgressFor, EXPLOSION_IMPACT_SECONDS, IDLE_SECONDS, LAVENDER_REVEAL_SECONDS, MUSIC_CUE_SECONDS, phaseAt, samplePhaseWindows } from './timeline.js?prepdiag=20260928l';
 
 export const COSMIC_STATE_KEY = 'chispa_cosmic_event_v1';
 
@@ -378,7 +378,6 @@ export class CosmicEventController {
     const frame = phaseAt(seconds);
     const windows = samplePhaseWindows(seconds);
     const payload = { phase: frame.name, progress: frame.progress, elapsed: frame.seconds, windows };
-
     // View first: during the Lavender handoff the flash must already cover the renderer swap.
     this.view?.renderFrame?.(payload);
 
@@ -397,7 +396,9 @@ export class CosmicEventController {
     if (waveA > 0) this.fracture?.releaseWave?.('A', waveA);
     if (waveB > 0) this.fracture?.releaseWave?.('B', waveB);
     if (waveC > 0) this.fracture?.releaseWave?.('C', waveC);
-    if (explosionProgress > 0) this.fracture?.applyExplosion?.(explosionProgress, seconds);
+    if (seconds >= EXPLOSION_IMPACT_SECONDS) {
+      this.fracture?.applyExplosion?.(explosionProgress, seconds);
+    }
 
     this.renderer?.sample?.(payload);
 

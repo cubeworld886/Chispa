@@ -4,6 +4,11 @@ export const LAVENDER_REVEAL_SECONDS = 5.25;
 // reveal+2.55s. Place the original sad vocal 0.25s into that exhale.
 export const LAVENDER_SAD_CUE_SECONDS = LAVENDER_REVEAL_SECONDS + 2.80;
 export const IDLE_SECONDS = 15.20;
+export const EXPLOSION_IMPACT_SECONDS = 3.20;
+
+const LAVENDER_PRE_FLASH_START_SECONDS = 2.84;
+const LAVENDER_PRE_FLASH_END_SECONDS = 3.08;
+const MAIN_FLASH_HALF_WINDOW_SECONDS = 0.10;
 
 export const COSMIC_PHASES = Object.freeze({
   hold: Object.freeze({ name: 'hold', start: 0.00, end: 0.35 }),
@@ -14,11 +19,19 @@ export const COSMIC_PHASES = Object.freeze({
   shardWaveB: Object.freeze({ name: 'shardWaveB', start: 2.12, end: 2.52 }),
   shardWaveC: Object.freeze({ name: 'shardWaveC', start: 2.44, end: 2.84 }),
   singularity: Object.freeze({ name: 'singularity', start: 2.82, end: 3.12 }),
-  primaryFlash: Object.freeze({ name: 'primaryFlash', start: 3.10, end: 3.30 }),
-  bigBang: Object.freeze({ name: 'bigBang', start: 3.14, end: 3.72 }),
+  primaryFlash: Object.freeze({
+    name: 'primaryFlash',
+    start: EXPLOSION_IMPACT_SECONDS - MAIN_FLASH_HALF_WINDOW_SECONDS,
+    end: EXPLOSION_IMPACT_SECONDS + MAIN_FLASH_HALF_WINDOW_SECONDS,
+  }),
+  bigBang: Object.freeze({ name: 'bigBang', start: EXPLOSION_IMPACT_SECONDS, end: 3.72 }),
   debrisExpansion: Object.freeze({ name: 'debrisExpansion', start: 3.58, end: 5.55 }),
   aftermath: Object.freeze({ name: 'aftermath', start: 5.55, end: 6.15 }),
-  lavenderFlash: Object.freeze({ name: 'lavenderFlash', start: 5.08, end: 5.44 }),
+  lavenderFlash: Object.freeze({
+    name: 'lavenderFlash',
+    start: LAVENDER_PRE_FLASH_START_SECONDS,
+    end: LAVENDER_PRE_FLASH_END_SECONDS,
+  }),
   lavenderReveal: Object.freeze({ name: 'lavenderReveal', start: 5.25, end: 6.15 }),
   realization: Object.freeze({ name: 'realization', start: 6.15, end: IDLE_SECONDS }),
   melancholicIdle: Object.freeze({ name: 'melancholicIdle', start: IDLE_SECONDS, end: Infinity }),

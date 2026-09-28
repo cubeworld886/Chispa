@@ -1,9 +1,9 @@
-import { COSMIC_PHASES } from './timeline.js';
+import { COSMIC_PHASES, EXPLOSION_IMPACT_SECONDS } from './timeline.js?prepdiag=20260928l';
 
 const NS = 'http://www.w3.org/2000/svg';
 const clamp01 = (value) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
 const round3 = (value) => Math.round(value * 1000) / 1000;
-const EXPLOSION_START = COSMIC_PHASES.bigBang.start;
+const EXPLOSION_START = EXPLOSION_IMPACT_SECONDS;
 let fractureSequence = 0;
 
 const SHARD_BLUEPRINTS = Object.freeze([

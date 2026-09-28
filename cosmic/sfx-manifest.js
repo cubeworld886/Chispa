@@ -1,4 +1,4 @@
-import { COSMIC_PHASES, LAVENDER_SAD_CUE_SECONDS } from './timeline.js?prepdiag=20260928g';
+import { COSMIC_PHASES, EXPLOSION_IMPACT_SECONDS, LAVENDER_SAD_CUE_SECONDS } from './timeline.js?prepdiag=20260928l';
 
 export function createCosmicSfxManifest(siteRoot) {
   const asset = (file) => new URL(`assets/cosmic/sfx/${file}`, siteRoot).href;
@@ -14,7 +14,7 @@ export function createCosmicSfxManifest(siteRoot) {
     {
       id: 'primary-explosion',
       url: asset('exploding-building-2.mp3'),
-      at: COSMIC_PHASES.bigBang.start,
+      at: EXPLOSION_IMPACT_SECONDS,
       gain: 0.38,
       fadeIn: 0.006,
       duration: 4.2,
