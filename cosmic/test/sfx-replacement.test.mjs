@@ -25,7 +25,9 @@ test('the small SFX set uses real source recordings and one synchronized timelin
   assert.equal(effects[3].at, LAVENDER_SAD_CUE_SECONDS);
   assert.ok(LAVENDER_SAD_CUE_SECONDS > LAVENDER_REVEAL_SECONDS + 2.71);
   assert.ok(LAVENDER_SAD_CUE_SECONDS < LAVENDER_REVEAL_SECONDS + 3.25);
-  assert.deepEqual(effects.slice(0, 3).map(({ duration }) => duration), [3.25, 4.2, 1.95]);
+  assert.equal(effects[0].duration, undefined, 'the glass take should play through its recorded fragment tail');
+  assert.equal(effects[0].fadeOut, undefined, 'do not fade the glass take before the debris tail');
+  assert.deepEqual(effects.slice(1, 3).map(({ duration }) => duration), [4.2, 1.95]);
   assert.deepEqual(effects.map(({ gain }) => gain), [0.30, 0.38, 0.28, 0.40]);
   assert.ok(effects.slice(0, 3).reduce((sum, { gain }) => sum + gain, 0) < 1);
   assert.ok(effects.every(({ playbackRate, pitch }) => playbackRate == null && pitch == null));

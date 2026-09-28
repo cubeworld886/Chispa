@@ -64,10 +64,10 @@ test('bootstrap includes the last preparation stage with the original failure', 
   assert.equal(failure.detail.error, rootError);
 });
 
-test('the visible loader shows a concrete runtime-import diagnostic instead of a network claim', async () => {
+test('the loader stays free of visible text when runtime preparation fails', async () => {
   const status = { textContent: '' };
   const diagnostic = { hidden: true, textContent: '' };
-  const action = { hidden: true, disabled: true, textContent: '', addEventListener() {} };
+  const action = { disabled: true, textContent: '', dataset: {}, setAttribute() {}, addEventListener() {} };
   const loader = {
     dataset: {},
     querySelector(selector) {
@@ -102,12 +102,11 @@ test('the visible loader shows a concrete runtime-import diagnostic instead of a
 
   await assert.rejects(bootstrap.preload());
 
-  assert.match(status.textContent, /No se pudo preparar la escena/);
-  assert.equal(diagnostic.hidden, false);
-  assert.match(diagnostic.textContent, /stage: runtime-import/);
-  assert.match(diagnostic.textContent, /production-runtime\.js/);
-  assert.match(diagnostic.textContent, /EncodingError: audio module failed to decode/);
-  assert.doesNotMatch(status.textContent, /conexión/);
+  assert.equal(status.textContent, '');
+  assert.equal(diagnostic.hidden, true);
+  assert.equal(diagnostic.textContent, '');
+  assert.equal(action.textContent, '');
+  assert.equal(loader.dataset.state, 'error');
 });
 
 test('the primary burst reaches full expansion during its short impact window', () => {

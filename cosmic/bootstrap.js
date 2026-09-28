@@ -168,7 +168,7 @@ export function resolveCosmicSiteRoot(moduleUrl = import.meta.url) {
   return new URL('../', moduleUrl).href;
 }
 
-const PREPARATION_DIAGNOSTIC_VERSION = '20260928g';
+const PREPARATION_DIAGNOSTIC_VERSION = '20260928i';
 
 export function createCosmicLayer(doc = globalThis.document) {
   const existing = doc?.querySelector?.('#cosmic-event-layer');
@@ -200,26 +200,12 @@ export function createCosmicLayer(doc = globalThis.document) {
 
 function createLoaderView(doc) {
   const root = doc?.querySelector?.('#cosmic-loader');
-  const statusNode = root?.querySelector?.('[data-loader-status]');
   const action = root?.querySelector?.('[data-loader-action]');
-  if (!root || !statusNode || !action) return null;
-  const labels = {
-    boot: 'Iniciando la experiencia',
-    'critical-assets': 'Cargando los recursos esenciales',
-    runtime: 'Preparando la escena',
-    'audio-prep': 'Preparando el audio',
-    'audio-ready': 'Audio listo',
-    'visual-prep': 'Afinando la animación',
-    ready: 'La escena está lista',
-    starting: 'Entrando',
-    started: '',
-    error: 'No se pudo preparar la escena.',
-  };
-  const diagnosticNode = root.querySelector('[data-loader-diagnostic]');
+  if (!root || !action) return null;
   return {
     root,
     action,
-    update(stage, detail = null) {
+    update(stage) {
       if (stage === 'started') {
         root.dataset.state = 'started';
         root.setAttribute('aria-hidden', 'true');
@@ -228,16 +214,10 @@ function createLoaderView(doc) {
       if (stage === 'disposed') return;
       root.dataset.state = stage;
       root.setAttribute('aria-busy', String(stage !== 'ready' && stage !== 'error'));
-      statusNode.textContent = labels[stage] ?? 'Preparando la escena';
-      if (diagnosticNode) {
-        diagnosticNode.hidden = stage !== 'error';
-        diagnosticNode.textContent = stage === 'error'
-          ? formatPreparationDiagnostic(detail)
-          : '';
-      }
-      action.hidden = stage !== 'ready' && stage !== 'error';
-      action.disabled = stage !== 'ready' && stage !== 'error';
-      action.textContent = stage === 'error' ? 'Reintentar' : 'Entrar';
+      const retrying = stage === 'error';
+      action.disabled = !retrying && stage !== 'ready';
+      action.setAttribute('aria-label', retrying ? 'Reintentar preparación' : 'Iniciar experiencia');
+      action.dataset.mode = retrying ? 'retry' : 'start';
     },
   };
 }
@@ -252,8 +232,17 @@ export function installProductionCosmicBootstrap({
   const loader = createLoaderView(doc);
   let bootstrap;
   bootstrap = installCosmicBootstrap({
-    onProgress: (stage, detail) => {
-      loader?.update(stage, detail);
+    onProgress: (stage) => {
+      loader?.update(stage);
+      if (stage === 'ready') {
+        void bootstrap.preload().then(async (controller) => {
+          try {
+            if (await controller?.canStartAutomatically?.()) void bootstrap.start();
+          } catch (error) {
+            console.info('[BOOT] audio requires a start gesture', error?.name ?? error?.message ?? error);
+          }
+        });
+      }
     },
     createController: async () => {
       const layer = createCosmicLayer(doc);

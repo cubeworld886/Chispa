@@ -268,6 +268,19 @@ export class CosmicEventController {
     return this.audioGesturePromise;
   }
 
+  async canStartAutomatically() {
+    if (this.state !== 'preloaded' && this.state !== 'armed') return false;
+    if (this.music?.deferStreamUntilGesture) return false;
+
+    this.primeStartGesture();
+    const [audioReady, musicReady] = await Promise.all([
+      Promise.resolve(this.audioGesturePromise).then(() => true, () => false),
+      Promise.resolve(this.musicGesturePromise).then(Boolean, () => false),
+    ]);
+    const contextState = this.audio?.context?.state;
+    return audioReady && musicReady && (!contextState || contextState === 'running');
+  }
+
   async start({ auto = true } = {}) {
     if (this.state === 'cold') await this.preload();
     if (this.state === 'preloaded') this.arm();

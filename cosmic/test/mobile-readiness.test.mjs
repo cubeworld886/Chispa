@@ -84,6 +84,30 @@ test('the visual playhead keeps moving when the browser suspends its audio clock
   assert.equal(musicStops, 1);
 });
 
+test('automatic start is allowed only when both the audio context and page music unlock', async () => {
+  const controller = new CosmicEventController({
+    fracture: {}, renderer: {},
+    audio: {
+      context: { state: 'running' },
+      resumeFromGesture: async () => true,
+    },
+    music: { primeFromGesture: async () => true },
+    lavender: {}, view: {},
+  });
+  controller.state = 'preloaded';
+
+  assert.equal(await controller.canStartAutomatically(), true);
+  assert.equal(controller.state, 'preloaded');
+
+  controller.state = 'preloaded';
+  controller.audio.context.state = 'suspended';
+  controller.audio.resumeFromGesture = async () => { throw new DOMException('gesture required', 'NotAllowedError'); };
+  controller.music.primeFromGesture = async () => { throw new DOMException('gesture required', 'NotAllowedError'); };
+
+  assert.equal(await controller.canStartAutomatically(), false);
+  assert.equal(controller.state, 'preloaded');
+});
+
 test('the visual sequence starts when a mobile browser rejects autoplay audio', async () => {
   let now = 0;
   let frameCallback = null;

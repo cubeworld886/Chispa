@@ -9,8 +9,7 @@ export function createCosmicSfxManifest(siteRoot) {
       at: COSMIC_PHASES.crackSeed.start,
       gain: 0.30,
       fadeIn: 0.008,
-      duration: 3.25,
-      fadeOut: 0.70,
+      // Let the full 4.032 s recording carry the crack through the later shard fall.
     },
     {
       id: 'primary-explosion',

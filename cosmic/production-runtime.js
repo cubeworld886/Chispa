@@ -1,12 +1,12 @@
 import { ConstellationFracture } from './constellation-fracture.js?prepdiag=20260928g';
 import { CosmicAudioDirector } from './cosmic-audio.js?prepdiag=20260928g';
-import { CosmicEventController, createDomCosmicSceneView } from './cosmic-event.js?prepdiag=20260928g';
+import { CosmicEventController, createDomCosmicSceneView } from './cosmic-event.js?prepdiag=20260928i';
 import { CosmicRenderer } from './cosmic-renderer.js?prepdiag=20260928g';
 import { ChispaLavenderHost } from './lavender-host.js?prepdiag=20260928g';
 import { PageMusicDirector } from './page-music.js?prepdiag=20260928g';
 import { detectBrowserQualityEnvironment, selectQualityProfile } from './quality-profile.js?prepdiag=20260928g';
 import { productionWebglAdapter } from './webgl-adapter.js?prepdiag=20260928g';
-import { createCosmicSfxManifest } from './sfx-manifest.js?prepdiag=20260928g';
+import { createCosmicSfxManifest } from './sfx-manifest.js?prepdiag=20260928h';
 
 export async function loadCanonicalLavenderEngine(siteRoot) {
   const assetBaseModuleUrl = new URL('../lavender-runtime/dist/runtimeAssetBase.js', import.meta.url).href;
