@@ -4,9 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lyra</title>
+  <style>
+    #cosmic-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483000;
+      display: grid;
+      place-items: center;
+      box-sizing: border-box;
+      padding: 24px;
+      color: rgba(245, 238, 255, .92);
+      background: #05040a;
+      opacity: 1;
+      visibility: visible;
+    }
+    #cosmic-loader[data-state="started"] {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  </style>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="cosmic/cosmic.css">
 </head>
 <body>
+
+<div id="cosmic-loader" class="cosmic-loader" data-state="boot" role="dialog" aria-modal="true" aria-labelledby="cosmic-loader-title" aria-busy="true">
+  <div class="cosmic-loader__card">
+    <span class="cosmic-loader__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <p class="cosmic-loader__eyebrow" id="cosmic-loader-title">LYRA</p>
+    <p class="cosmic-loader__status" data-loader-status aria-live="polite">Iniciando la experiencia</p>
+    <p class="cosmic-loader__diagnostic" data-loader-diagnostic hidden></p>
+    <button class="cosmic-loader__action" type="button" data-loader-action hidden>Entrar</button>
+  </div>
+</div>
 
 <canvas id="background"></canvas>
 
@@ -838,5 +869,10 @@
 
 
 <script src="script.js"></script>
+<script type="module" src="cosmic/bootstrap.js?prepdiag=20260928g"></script>
 </body>
 </html>
+
+
+
+
