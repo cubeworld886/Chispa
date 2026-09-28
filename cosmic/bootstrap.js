@@ -168,7 +168,7 @@ export function resolveCosmicSiteRoot(moduleUrl = import.meta.url) {
   return new URL('../', moduleUrl).href;
 }
 
-const PREPARATION_DIAGNOSTIC_VERSION = '20260928l';
+const PREPARATION_DIAGNOSTIC_VERSION = '20260928m';
 
 export function createCosmicLayer(doc = globalThis.document) {
   const existing = doc?.querySelector?.('#cosmic-event-layer');

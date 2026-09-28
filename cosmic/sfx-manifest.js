@@ -6,10 +6,13 @@ export function createCosmicSfxManifest(siteRoot) {
     {
       id: 'fracture-crack',
       url: asset('constellation-glass-shatter.mp3'),
-      at: COSMIC_PHASES.crackSeed.start,
-      gain: 0.30,
-      fadeIn: 0.008,
-      // Let the full 4.032 s recording carry the crack through the later shard fall.
+      // Three distinct recorded transients in this take, aligned to the three
+      // actual shard separations. The earlier tension/crack drawings stay silent.
+      cues: [
+        { at: COSMIC_PHASES.shardWaveA.start, sourceOffset: 0.008, duration: 0.30, gain: 0.30, fadeIn: 0.005, fadeOut: 0.035 },
+        { at: COSMIC_PHASES.shardWaveB.start, sourceOffset: 0.63, duration: 0.28, gain: 0.22, fadeIn: 0.005, fadeOut: 0.035 },
+        { at: COSMIC_PHASES.shardWaveC.start, sourceOffset: 1.49, duration: 0.52, gain: 0.26, fadeIn: 0.005, fadeOut: 0.08 },
+      ],
     },
     {
       id: 'primary-explosion',

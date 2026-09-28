@@ -228,6 +228,7 @@ export class CosmicAudioDirector {
     fadeOut = 0,
     duration = null,
     lowpassHz = null,
+    sourceOffset = 0,
   } = {}) {
     const source = this.context.createBufferSource();
     const voiceGain = this.context.createGain();
@@ -263,7 +264,8 @@ export class CosmicAudioDirector {
       try { voiceGain.disconnect?.(); } catch {}
       this.voices = this.voices.filter((candidate) => candidate !== voice);
     };
-    source.start(at);
+    if (sourceOffset > 0) source.start(at, sourceOffset);
+    else source.start(at);
     this.voices.push(voice);
     return voice;
   }
@@ -292,19 +294,22 @@ export class CosmicAudioDirector {
         this.gainNode = stem.gainNode;
       }
       for (const effect of this.soundEffects) {
-        const remaining = (Math.max(0, Number(effect.at) || 0)
-          - this.timelineOffsetSeconds - this.startLeadSeconds);
-        // The visual cue already passed while a mobile context resumed. Never
-        // replay an old impact late; only schedule cues that still lie ahead.
-        if (remaining < 0) continue;
-        this.#createVoice(this.buffers.get(effect.id), {
-          at: t0 + remaining,
-          gain: Number(effect.gain) || 0,
-          fadeIn: effect.fadeIn,
-          fadeOut: effect.fadeOut,
-          duration: effect.duration,
-          lowpassHz: effect.lowpassHz,
-        });
+        for (const cue of effect.cues?.length ? effect.cues : [effect]) {
+          const remaining = (Math.max(0, Number(cue.at ?? effect.at) || 0)
+            - this.timelineOffsetSeconds - this.startLeadSeconds);
+          // The visual cue already passed while a mobile context resumed. Never
+          // replay an old impact late; only schedule cues that still lie ahead.
+          if (remaining < 0) continue;
+          this.#createVoice(this.buffers.get(effect.id), {
+            at: t0 + remaining,
+            gain: Number(cue.gain ?? effect.gain) || 0,
+            fadeIn: cue.fadeIn ?? effect.fadeIn,
+            fadeOut: cue.fadeOut ?? effect.fadeOut,
+            duration: cue.duration ?? effect.duration,
+            lowpassHz: cue.lowpassHz ?? effect.lowpassHz,
+            sourceOffset: cue.sourceOffset ?? 0,
+          });
+        }
       }
       this.authoritative = true;
       return t0;

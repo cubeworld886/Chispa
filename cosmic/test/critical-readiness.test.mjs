@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installCosmicBootstrap, installProductionCosmicBootstrap } from '../bootstrap.js';
 import { CosmicAudioDirector } from '../cosmic-audio.js';
+import { createCosmicSfxManifest } from '../sfx-manifest.js';
 import { PageMusicDirector } from '../page-music.js';
 import { deriveVfxState } from '../vfx-state.js';
 import { COSMIC_PHASES } from '../timeline.js';
@@ -155,7 +156,7 @@ class FakeAudioContext {
   createBufferSource() {
     const source = {
       connect(target) { this.target = target; },
-      start(time) { this.startedAt = time; },
+      start(time, offset = 0) { this.startedAt = time; this.sourceOffset = offset; },
       stop(time) { this.stoppedAt = time; },
       disconnect() {},
     };
@@ -255,6 +256,30 @@ test('decoded effects map their audio times to the shared visual T0', async () =
   assert.equal(context.filters[0].type, 'lowpass');
   context.currentTime = 12.58;
   assert.equal(audio.currentTime(), 3.5);
+});
+
+test('one decoded glass recording cues its three distinct transients at the three visible shard waves', async () => {
+  const context = new FakeAudioContext();
+  const effects = createCosmicSfxManifest('https://chispa.test/');
+  const requested = [];
+  const audio = new CosmicAudioDirector({
+    audioContextFactory: () => context,
+    soundEffects: effects,
+    fetcher: async (url) => {
+      requested.push(url);
+      return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+    },
+  });
+  await audio.preload();
+  await audio.start();
+
+  assert.equal(requested.filter((url) => url.endsWith('constellation-glass-shatter.mp3')).length, 1);
+  assert.deepEqual(context.startedSources.slice(0, 3).map(({ startedAt, sourceOffset }) => [startedAt, sourceOffset]), [
+    [9 + COSMIC_PHASES.shardWaveA.start, 0.008],
+    [9 + COSMIC_PHASES.shardWaveB.start, 0.63],
+    [9 + COSMIC_PHASES.shardWaveC.start, 1.49],
+  ]);
+  await audio.destroy();
 });
 
 test('decoded SFX that already passed during mobile audio unlock are skipped, not replayed late', async () => {

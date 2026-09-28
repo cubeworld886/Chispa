@@ -19,17 +19,23 @@ test('the small SFX set uses real source recordings and one synchronized timelin
     'rocks-gravel-slide.mp3',
     'lavender-sad.wav',
   ]);
-  assert.equal(effects[0].at, COSMIC_PHASES.crackSeed.start);
+  assert.deepEqual(effects[0].cues.map(({ at }) => at), [
+    COSMIC_PHASES.shardWaveA.start,
+    COSMIC_PHASES.shardWaveB.start,
+    COSMIC_PHASES.shardWaveC.start,
+  ]);
+  assert.ok(effects[0].cues.every(({ at }) => at > COSMIC_PHASES.crackPropagation.start));
+  assert.deepEqual(effects[0].cues.map(({ sourceOffset }) => sourceOffset), [0.008, 0.63, 1.49]);
+  assert.ok(effects[0].cues.every((cue, index, cues) => index === 0 || cues[index - 1].at + cues[index - 1].duration < cue.at),
+    'the recorded glass slices do not overlap');
   assert.equal(effects[1].at, COSMIC_PHASES.bigBang.start);
   assert.equal(effects[2].at, COSMIC_PHASES.debrisExpansion.start);
   assert.equal(effects[3].at, LAVENDER_SAD_CUE_SECONDS);
   assert.ok(LAVENDER_SAD_CUE_SECONDS > LAVENDER_REVEAL_SECONDS + 2.71);
   assert.ok(LAVENDER_SAD_CUE_SECONDS < LAVENDER_REVEAL_SECONDS + 3.25);
-  assert.equal(effects[0].duration, undefined, 'the glass take should play through its recorded fragment tail');
-  assert.equal(effects[0].fadeOut, undefined, 'do not fade the glass take before the debris tail');
   assert.deepEqual(effects.slice(1, 3).map(({ duration }) => duration), [4.2, 1.95]);
-  assert.deepEqual(effects.map(({ gain }) => gain), [0.30, 0.38, 0.28, 0.40]);
-  assert.ok(effects.slice(0, 3).reduce((sum, { gain }) => sum + gain, 0) < 1);
+  assert.deepEqual(effects[0].cues.map(({ gain }) => gain), [0.30, 0.22, 0.26]);
+  assert.deepEqual(effects.slice(1).map(({ gain }) => gain), [0.38, 0.28, 0.40]);
   assert.ok(effects.every(({ playbackRate, pitch }) => playbackRate == null && pitch == null));
 });
 
