@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CosmicEventController, deriveCinematicViewState } from '../cosmic-event.js';
+import { ConstellationFracture } from '../constellation-fracture.js';
 import { COSMIC_PHASES, EXPLOSION_IMPACT_SECONDS } from '../timeline.js';
 import { createCosmicSfxManifest } from '../sfx-manifest.js';
 
@@ -39,4 +40,33 @@ test('constellation launch is held through the Lavender flash and starts at the 
   assert.deepEqual(launches[0], { progress: 0, seconds: EXPLOSION_IMPACT_SECONDS });
   assert.equal(deriveCinematicViewState(frames.at(-1)).flashOpacity, 1, 'the launch coincides with the main flash peak');
   assert.equal(frames.at(-1).windows.bigBang, 0, 'the shockwave window begins at this same instant');
+});
+
+test('completed shard wave avoids repeating identical style writes on following frames', () => {
+  let styleWrites = 0;
+  const wrapperStyle = new Proxy({}, {
+    set(target, key, value) { styleWrites += 1; target[key] = value; return true; },
+  });
+  const hostStyle = new Proxy({}, {
+    set(target, key, value) { styleWrites += 1; target[key] = value; return true; },
+  });
+  const groupStyle = new Proxy({}, {
+    set(target, key, value) { styleWrites += 1; target[key] = value; return true; },
+  });
+  const fracture = new ConstellationFracture({ svg: {}, group: {} });
+  fracture.prepared = true;
+  fracture.cloneHost = { style: hostStyle };
+  fracture.group.style = groupStyle;
+  fracture.shards = [{
+    id: 'shard-a', wave: 'A', angle: 0, preBreakPx: 12, preRotationDeg: 3,
+    wrapper: { style: wrapperStyle },
+  }];
+  fracture.currentTransforms.set('shard-a', { x: 0, y: 0, rotation: 0, opacity: 1 });
+
+  fracture.releaseWave('A', 1);
+  const writesAfterCompletion = styleWrites;
+  fracture.releaseWave('A', 1);
+
+  assert.ok(writesAfterCompletion > 0);
+  assert.equal(styleWrites, writesAfterCompletion);
 });

@@ -1,16 +1,16 @@
-import { ConstellationFracture } from './constellation-fracture.js?prepdiag=20260928l';
+import { ConstellationFracture } from './constellation-fracture.js?prepdiag=20260928p';
 import { CosmicAudioDirector } from './cosmic-audio.js?prepdiag=20260928m';
-import { CosmicEventController, createDomCosmicSceneView } from './cosmic-event.js?prepdiag=20260928l';
+import { CosmicEventController, createDomCosmicSceneView } from './cosmic-event.js?prepdiag=20260928p';
 import { CosmicRenderer } from './cosmic-renderer.js?prepdiag=20260928g';
 import { ChispaLavenderHost } from './lavender-host.js?prepdiag=20260928n';
 import { PageMusicDirector } from './page-music.js?prepdiag=20260928g';
 import { detectBrowserQualityEnvironment, selectQualityProfile } from './quality-profile.js?prepdiag=20260928g';
-import { productionWebglAdapter } from './webgl-adapter.js?prepdiag=20260928g';
+import { productionWebglAdapter } from './webgl-adapter.js?prepdiag=20260928p';
 import { createCosmicSfxManifest } from './sfx-manifest.js?prepdiag=20260928m';
 
 export async function loadCanonicalLavenderEngine(siteRoot) {
   const assetBaseModuleUrl = new URL('../lavender-runtime/dist/runtimeAssetBase.js', import.meta.url).href;
-  const engineModuleUrl = new URL('../lavender-runtime/dist/renderer/LavenderSvgEngine.js?prepdiag=20260928n', import.meta.url).href;
+  const engineModuleUrl = new URL('../lavender-runtime/dist/renderer/LavenderSvgEngine.js?prepdiag=20260928p', import.meta.url).href;
   console.info('[BOOT] Lavender runtime import start', JSON.stringify({ assetBaseModuleUrl, engineModuleUrl }));
   let requestedModuleUrl = assetBaseModuleUrl;
   let assets;
@@ -19,7 +19,7 @@ export async function loadCanonicalLavenderEngine(siteRoot) {
     assets = await import('../lavender-runtime/dist/runtimeAssetBase.js');
     assets.setLavenderAssetBase(siteRoot);
     requestedModuleUrl = engineModuleUrl;
-    runtime = await import('../lavender-runtime/dist/renderer/LavenderSvgEngine.js?prepdiag=20260928n');
+    runtime = await import('../lavender-runtime/dist/renderer/LavenderSvgEngine.js?prepdiag=20260928p');
   } catch (cause) {
     const error = new Error(`Lavender runtime import failed: ${cause?.message ?? cause}`);
     error.name = cause?.name || error.name;

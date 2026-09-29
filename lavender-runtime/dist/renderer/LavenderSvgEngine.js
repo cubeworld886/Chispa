@@ -189,6 +189,8 @@ export class LavenderSvgEngine {
     lastMaterialDriver = Number.NaN;
     lastLayoutW = -1;
     lastLayoutH = -1;
+    hostWidth = 0;
+    hostHeight = 0;
     lastLayoutScale = Number.NaN;
     lastLayoutCenterX = Number.NaN;
     lastLayoutCenterY = Number.NaN;
@@ -252,9 +254,9 @@ export class LavenderSvgEngine {
     setTravelDynamics(next) { this.targetTravel = { ...this.targetTravel, ...next }; }
     snapMotion() { this.gazeX = this.targetGazeX; this.gazeY = this.targetGazeY; this.yaw = this.targetYaw; this.yawVelocity = 0; this.travel = { ...this.targetTravel }; }
     getSceneView() { return { ...this.sceneView }; }
-    getViewportSize() { return { width: Math.max(1, this.host.clientWidth), height: Math.max(1, this.host.clientHeight) }; }
-    sceneForScreenRect(left, top, size) { const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight), side = Math.max(1, Math.min(w, h)); return { scale: Math.max(.01, size / side), centerX: (left + size * .5) / w, centerY: (top + size * .515) / h, anchorX: .5, anchorY: .515, alpha: 1 }; }
-    getActorScreenRect() { const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight), side = Math.max(1, Math.min(w, h)), size = side * this.sceneView.scale, left = w * this.sceneView.centerX - this.sceneView.anchorX * size, top = h * this.sceneView.centerY - this.sceneView.anchorY * size; return { left, top, width: size, height: size, right: left + size, bottom: top + size }; }
+    getViewportSize() { return { width: this.hostWidth || Math.max(1, this.host.clientWidth), height: this.hostHeight || Math.max(1, this.host.clientHeight) }; }
+    sceneForScreenRect(left, top, size) { const w = this.hostWidth || Math.max(1, this.host.clientWidth), h = this.hostHeight || Math.max(1, this.host.clientHeight), side = Math.max(1, Math.min(w, h)); return { scale: Math.max(.01, size / side), centerX: (left + size * .5) / w, centerY: (top + size * .515) / h, anchorX: .5, anchorY: .515, alpha: 1 }; }
+    getActorScreenRect() { const w = this.hostWidth || Math.max(1, this.host.clientWidth), h = this.hostHeight || Math.max(1, this.host.clientHeight), side = Math.max(1, Math.min(w, h)), size = side * this.sceneView.scale, left = w * this.sceneView.centerX - this.sceneView.anchorX * size, top = h * this.sceneView.centerY - this.sceneView.anchorY * size; return { left, top, width: size, height: size, right: left + size, bottom: top + size }; }
     // WIP41: setters only mutate state. layout() commits exactly once from render/sizing.
     setSceneView(next) { this.sceneView = { ...this.sceneView, ...next }; if (!this.cinematicLock)
         this.keepActorSafe(); }
@@ -265,7 +267,7 @@ export class LavenderSvgEngine {
     setState(next) { if (next === this.state)
         return; this.transitionFrom = this.lastPose; this.transitionStarted = performance.now(); this.state = next; this.stateStarted = performance.now(); }
     syncHostSize = () => { if (this.destroyed)
-        return; const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight); this.svg?.setAttribute('viewBox', `0 0 ${w} ${h}`); this.svg?.setAttribute('width', String(w)); this.svg?.setAttribute('height', String(h)); this.layout(); };
+        return; const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight); this.hostWidth = w; this.hostHeight = h; this.svg?.setAttribute('viewBox', `0 0 ${w} ${h}`); this.svg?.setAttribute('width', String(w)); this.svg?.setAttribute('height', String(h)); this.layout(); };
     destroy() { this.destroyed = true; if (this.raf)
         cancelAnimationFrame(this.raf); this.hostResizeObserver?.disconnect(); this.hostResizeObserver = undefined; removeEventListener('resize', this.syncHostSize); this.svg?.remove(); }
     build() {
@@ -427,11 +429,11 @@ export class LavenderSvgEngine {
         this.host.append(this.svg);
         addEventListener('resize', this.syncHostSize, { passive: true });
     }
-    keepActorSafe() { const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight), side = Math.min(w, h), size = side * Math.max(.01, this.sceneView.scale), pad = Math.min(size * .16, 34), minCx = (pad + size * this.sceneView.anchorX) / w, maxCx = (w - pad - size * (1 - this.sceneView.anchorX)) / w, minCy = (70 + size * this.sceneView.anchorY * .78) / h, maxCy = (h - pad - size * (1 - this.sceneView.anchorY) * .70) / h; this.sceneView.centerX = clamp(this.sceneView.centerX, Math.min(.5, minCx), Math.max(.5, maxCx)); this.sceneView.centerY = clamp(this.sceneView.centerY, Math.min(.5, minCy), Math.max(.5, maxCy)); }
+    keepActorSafe() { const w = this.hostWidth || Math.max(1, this.host.clientWidth), h = this.hostHeight || Math.max(1, this.host.clientHeight), side = Math.min(w, h), size = side * Math.max(.01, this.sceneView.scale), pad = Math.min(size * .16, 34), minCx = (pad + size * this.sceneView.anchorX) / w, maxCx = (w - pad - size * (1 - this.sceneView.anchorX)) / w, minCy = (70 + size * this.sceneView.anchorY * .78) / h, maxCy = (h - pad - size * (1 - this.sceneView.anchorY) * .70) / h; this.sceneView.centerX = clamp(this.sceneView.centerX, Math.min(.5, minCx), Math.max(.5, maxCx)); this.sceneView.centerY = clamp(this.sceneView.centerY, Math.min(.5, minCy), Math.max(.5, maxCy)); }
     layout() {
         if (!this.actor)
             return;
-        const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight), v = this.sceneView, layoutDirty = w !== this.lastLayoutW || h !== this.lastLayoutH || v.scale !== this.lastLayoutScale || v.centerX !== this.lastLayoutCenterX || v.centerY !== this.lastLayoutCenterY || v.anchorX !== this.lastLayoutAnchorX || v.anchorY !== this.lastLayoutAnchorY || v.alpha !== this.lastLayoutAlpha;
+        const w = this.hostWidth || Math.max(1, this.host.clientWidth), h = this.hostHeight || Math.max(1, this.host.clientHeight), v = this.sceneView, layoutDirty = w !== this.lastLayoutW || h !== this.lastLayoutH || v.scale !== this.lastLayoutScale || v.centerX !== this.lastLayoutCenterX || v.centerY !== this.lastLayoutCenterY || v.anchorX !== this.lastLayoutAnchorX || v.anchorY !== this.lastLayoutAnchorY || v.alpha !== this.lastLayoutAlpha;
         if (!layoutDirty)
             return;
         this.lastLayoutW = w;

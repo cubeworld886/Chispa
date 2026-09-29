@@ -1,4 +1,4 @@
-import { completedProgressFor, EXPLOSION_IMPACT_SECONDS, IDLE_SECONDS, LAVENDER_REVEAL_SECONDS, MUSIC_CUE_SECONDS, phaseAt, samplePhaseWindows } from './timeline.js?prepdiag=20260928l';
+import { completedProgressFor, COSMIC_PHASES, EXPLOSION_IMPACT_SECONDS, IDLE_SECONDS, LAVENDER_REVEAL_SECONDS, MUSIC_CUE_SECONDS, phaseAt, samplePhaseWindows } from './timeline.js?prepdiag=20260928l';
 
 export const COSMIC_STATE_KEY = 'chispa_cosmic_event_v1';
 
@@ -164,6 +164,8 @@ export class CosmicEventController {
     this.musicUnavailable = false;
     this.audioGesturePromise = null;
     this.musicGesturePromise = null;
+    this.lastRealizationBeat = -1;
+    this.heavyVfxReleased = false;
   }
 
   async preload({ onProgress = () => {} } = {}) {
@@ -401,6 +403,13 @@ export class CosmicEventController {
     }
 
     this.renderer?.sample?.(payload);
+    // The shockwave and debris are fully faded by aftermath end. Clear and
+    // release the full-screen backend here instead of keeping its canvas/GPU
+    // path alive throughout Lavender's remaining realization.
+    if (!this.heavyVfxReleased && seconds >= COSMIC_PHASES.aftermath.end) {
+      this.heavyVfxReleased = true;
+      this.renderer?.disposeHeavyVfx?.();
+    }
 
     if (!this.musicCued && seconds >= MUSIC_CUE_SECONDS) {
       this.musicCued = true;
@@ -444,22 +453,32 @@ export class CosmicEventController {
 
   #driveRealization(seconds) {
     const age = seconds - (LAVENDER_REVEAL_SECONDS + 0.90);
-    const targets = this.fracture?.getResidualTargets?.() ?? this.residualTargets;
-    if (age < 0.55) {
-      return;
-    } else if (age < 1.45) {
-      const first = targets[0];
+    if (age < 0.55) return;
+
+    const beat = age < 1.45 ? 0
+      : age < 2.35 ? 1
+        : age < 4.15 ? 2
+          : age < 6.10 ? 3
+            : age < 8.20 ? 4 : 5;
+    // Each gaze is a held acting beat. Updating the same target every frame
+    // created needless allocations and forced layout reads after SVG writes.
+    if (beat === this.lastRealizationBeat) return;
+    this.lastRealizationBeat = beat;
+
+    if (beat === 0) {
+      const first = this.fracture?.getResidualTargets?.()[0] ?? this.residualTargets[0];
       if (first) this.lavender?.lookAtWorldPoint?.(first.x, first.y);
-    } else if (age < 2.35) {
+    } else if (beat === 1) {
       this.lavender?.lookDown?.();
-    } else if (age < 4.15) {
-      const first = targets[0];
+    } else if (beat === 2) {
+      const first = this.fracture?.getResidualTargets?.()[0] ?? this.residualTargets[0];
       if (first) this.lavender?.lookAtWorldPoint?.(first.x, first.y);
-    } else if (age < 6.10) {
+    } else if (beat === 3) {
       this.lavender?.lookDown?.();
-    } else if (age < 8.20) {
+    } else if (beat === 4) {
       this.lavender?.lookAtWorldPoint?.(0.5, 0.51, { normalized: true });
     } else {
+      const targets = this.fracture?.getResidualTargets?.() ?? this.residualTargets;
       const second = targets[1] ?? targets[0];
       if (second) this.lavender?.lookAtWorldPoint?.(second.x, second.y);
     }
@@ -511,7 +530,6 @@ export function createDomCosmicSceneView({ layer, world, vfxHost, quality = {} }
   const renderFrame = ({ phase, progress, elapsed, windows }) => {
     layer.dataset.phase = phase;
     if (veil) veil.dataset.phase = phase;
-    layer.style.setProperty('--cosmic-time', String(elapsed));
     const state = deriveCinematicViewState({ windows, elapsed, quality: { ...quality, flashScale, shakeScale } });
 
     if (flash) {

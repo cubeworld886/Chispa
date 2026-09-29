@@ -380,8 +380,11 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
     'uScene', 'uResolution', 'uOrigin', 'uShockwave', 'uStrength', 'uBloom', 'uBloomRadius', 'uTime',
   ]);
 
-  let cssWidth = 1;
-  let cssHeight = 1;
+  let cssWidth = 0;
+  let cssHeight = 0;
+  let measuredCssWidth = 0;
+  let measuredCssHeight = 0;
+  let sizeDirty = true;
   let bufferWidth = 1;
   let bufferHeight = 1;
   let originScreen = { x: 0.5, y: 0.5 };
@@ -392,14 +395,32 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
   let canvasHasEffect = false;
   let sceneTarget = createSceneTarget(gl, 1, 1);
 
+  const win = doc?.defaultView ?? globalThis.window;
+  const measureViewport = () => {
+    if (disposed || contextWasLost) return;
+    measuredCssWidth = Math.max(1, container.clientWidth || win?.innerWidth || 1);
+    measuredCssHeight = Math.max(1, container.clientHeight || win?.innerHeight || 1);
+    sizeDirty = true;
+  };
+  const resizeObserver = typeof (win?.ResizeObserver ?? globalThis.ResizeObserver) === 'function'
+    ? new (win?.ResizeObserver ?? globalThis.ResizeObserver)(measureViewport)
+    : null;
+  resizeObserver?.observe(container);
+  win?.addEventListener?.('resize', measureViewport, { passive: true });
+  measureViewport();
+
   const resize = () => {
     if (disposed || contextWasLost) return;
-    const width = Math.max(1, container.clientWidth || globalThis.innerWidth || 1);
-    const height = Math.max(1, container.clientHeight || globalThis.innerHeight || 1);
+    const width = measuredCssWidth || 1;
+    const height = measuredCssHeight || 1;
     const dpr = Math.max(1, Math.min(Number(quality?.dpr) || 1, Number(quality?.maxDpr) || 1.5));
     const nextBufferWidth = Math.max(1, Math.round(width * dpr));
     const nextBufferHeight = Math.max(1, Math.round(height * dpr));
-    if (width === cssWidth && height === cssHeight && nextBufferWidth === bufferWidth && nextBufferHeight === bufferHeight) return;
+    if (!sizeDirty && width === cssWidth && height === cssHeight && nextBufferWidth === bufferWidth && nextBufferHeight === bufferHeight) return;
+    if (width === cssWidth && height === cssHeight && nextBufferWidth === bufferWidth && nextBufferHeight === bufferHeight) {
+      sizeDirty = false;
+      return;
+    }
     cssWidth = width;
     cssHeight = height;
     bufferWidth = nextBufferWidth;
@@ -411,6 +432,7 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
     resizeSceneTarget(gl, sceneTarget, bufferWidth, bufferHeight);
     originNdc = normalizeOriginToNdc(originScreen, cssWidth, cssHeight);
     originUv = { x: originScreen.x / cssWidth, y: 1 - originScreen.y / cssHeight };
+    sizeDirty = false;
   };
 
   const updateOrigin = (point) => {
@@ -532,6 +554,8 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
     dispose() {
       if (disposed) return;
       disposed = true;
+      resizeObserver?.disconnect?.();
+      win?.removeEventListener?.('resize', measureViewport);
       canvas.removeEventListener('webglcontextlost', contextLost);
       safeDelete(gl, 'deleteFramebuffer', sceneTarget?.framebuffer);
       safeDelete(gl, 'deleteTexture', sceneTarget?.texture);

@@ -5,6 +5,9 @@ const clamp01 = (value) => Math.max(0, Math.min(1, Number.isFinite(value) ? valu
 const round3 = (value) => Math.round(value * 1000) / 1000;
 const EXPLOSION_START = EXPLOSION_IMPACT_SECONDS;
 let fractureSequence = 0;
+const setInlineStyleIfChanged = (style, property, value) => {
+  if (style[property] !== value) style[property] = value;
+};
 
 const SHARD_BLUEPRINTS = Object.freeze([
   { id: 'glass-01', wave: 'A', centroid: [0.17, 0.16], clip: '0,0 .355,0 .338,.355 0,.325' },
@@ -184,6 +187,9 @@ export class ConstellationFracture {
     this.groupRect = null;
     this.waveProgress = new Map([['A', 0], ['B', 0], ['C', 0]]);
     this.currentTransforms = new Map();
+    this.lastTensionProgress = Number.NaN;
+    this.lastCrackSeedProgress = Number.NaN;
+    this.lastCrackPropagationProgress = Number.NaN;
     this.residualRaf = null;
     this.residualStartedAt = 0;
     this.residualCinematicStart = 0;
@@ -269,24 +275,28 @@ export class ConstellationFracture {
   tension(progress) {
     if (!this.prepared) this.prepare();
     const p = clamp01(progress);
+    if (p === this.lastTensionProgress) return;
+    this.lastTensionProgress = p;
     const brightness = round3(1 + p * 0.55);
     const saturation = round3(1 + p * 0.28);
-    this.group.style.filter = `brightness(${brightness}) saturate(${saturation})`;
+    setInlineStyleIfChanged(this.group.style, 'filter', `brightness(${brightness}) saturate(${saturation})`);
   }
 
   crackSeed(progress) {
     if (!this.prepared) this.prepare();
     const p = clamp01(progress);
+    if (p === this.lastCrackSeedProgress) return;
+    this.lastCrackSeedProgress = p;
     const count = Math.min(2, this.crackPaths.length);
     for (let index = 0; index < this.crackPaths.length; index += 1) {
       const path = this.crackPaths[index];
       if (index < count) {
         const local = clamp01(p * count - index + 0.45);
-        path.style.opacity = `${round3(local)}`;
-        path.style.strokeDasharray = '1';
-        path.style.strokeDashoffset = `${round3(1 - local)}`;
+        setInlineStyleIfChanged(path.style, 'opacity', `${round3(local)}`);
+        setInlineStyleIfChanged(path.style, 'strokeDasharray', '1');
+        setInlineStyleIfChanged(path.style, 'strokeDashoffset', `${round3(1 - local)}`);
       } else {
-        path.style.opacity = '0';
+        setInlineStyleIfChanged(path.style, 'opacity', '0');
       }
     }
   }
@@ -294,26 +304,32 @@ export class ConstellationFracture {
   crackPropagation(progress) {
     if (!this.prepared) this.prepare();
     const p = clamp01(progress);
+    if (p === this.lastCrackPropagationProgress) return;
+    this.lastCrackPropagationProgress = p;
     for (let index = 0; index < this.crackPaths.length; index += 1) {
       const staggerStart = index / (this.crackPaths.length + 2);
       const local = clamp01((p - staggerStart) / Math.max(0.18, 1 - staggerStart));
       const path = this.crackPaths[index];
-      path.style.opacity = `${round3(local)}`;
-      path.style.strokeDasharray = '1';
-      path.style.strokeDashoffset = `${round3(1 - local)}`;
+      setInlineStyleIfChanged(path.style, 'opacity', `${round3(local)}`);
+      setInlineStyleIfChanged(path.style, 'strokeDasharray', '1');
+      setInlineStyleIfChanged(path.style, 'strokeDashoffset', `${round3(1 - local)}`);
     }
     const fade = 1 - p * p * (3 - 2 * p);
-    for (const { element } of this.labels) element.style.opacity = `${round3(fade)}`;
+    for (const { element } of this.labels) setInlineStyleIfChanged(element.style, 'opacity', `${round3(fade)}`);
   }
 
   #applyTransform(shard, transform) {
-    const stable = {
-      x: round3(transform.x),
-      y: round3(transform.y),
-      rotation: round3(transform.rotation),
-      opacity: round3(transform.opacity ?? 1),
-    };
-    this.currentTransforms.set(shard.id, stable);
+    const x = round3(transform.x);
+    const y = round3(transform.y);
+    const rotation = round3(transform.rotation);
+    const opacity = round3(transform.opacity ?? 1);
+    let stable = this.currentTransforms.get(shard.id);
+    if (stable && stable.x === x && stable.y === y && stable.rotation === rotation && stable.opacity === opacity) return;
+    if (stable) Object.assign(stable, { x, y, rotation, opacity });
+    else {
+      stable = { x, y, rotation, opacity };
+      this.currentTransforms.set(shard.id, stable);
+    }
     shard.wrapper.style.transform = `translate3d(${stable.x}px, ${stable.y}px, 0) rotate(${stable.rotation}deg)`;
     shard.wrapper.style.opacity = `${stable.opacity}`;
   }
@@ -323,6 +339,7 @@ export class ConstellationFracture {
     const wave = String(name || '').toUpperCase();
     if (!this.waveProgress.has(wave)) return;
     const p = clamp01(progress);
+    if (this.waveProgress.get(wave) === p) return;
     this.waveProgress.set(wave, p);
     if (p > 0) {
       this.cloneHost.style.opacity = '1';

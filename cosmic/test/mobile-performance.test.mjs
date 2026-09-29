@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CosmicRenderer } from '../cosmic-renderer.js';
+import { CosmicEventController } from '../cosmic-event.js';
 import { selectQualityProfile } from '../quality-profile.js';
 import { deriveVfxState } from '../vfx-state.js';
 import { hasRenderableEffect, waitForGpu } from '../webgl-adapter.js';
@@ -182,4 +183,55 @@ test('Lavender animation loop can pause and resume without starting duplicate fr
     if (previousCancel) Object.defineProperty(globalThis, 'cancelAnimationFrame', previousCancel);
     else delete globalThis.cancelAnimationFrame;
   }
+});
+
+test('cached Lavender viewport avoids layout reads during cinematic layout commits', () => {
+  let layoutReads = 0;
+  const engine = Object.create(LavenderSvgEngine.prototype);
+  engine.hostWidth = 390;
+  engine.hostHeight = 844;
+  engine.host = {
+    get clientWidth() { layoutReads += 1; return 390; },
+    get clientHeight() { layoutReads += 1; return 844; },
+    closest() { return null; },
+  };
+  engine.sceneView = { scale: 0.3, centerX: 0.5, centerY: 0.5, anchorX: 0.5, anchorY: 0.515, alpha: 1 };
+  engine.lastLayoutW = 0;
+  engine.lastLayoutH = 0;
+  engine.lastLayoutScale = Number.NaN;
+  engine.actor = { setAttribute() {} };
+
+  engine.layout();
+  const rect = engine.getActorScreenRect();
+
+  assert.equal(layoutReads, 0);
+  assert.equal(rect.width, 117);
+});
+
+test('Lavender realization holds gaze targets between acting beats instead of sampling every frame', () => {
+  let targetReads = 0;
+  const gazeCalls = [];
+  const controller = new CosmicEventController({
+    fracture: {
+      getResidualTargets() { targetReads += 1; return [{ x: 120, y: 240 }, { x: 200, y: 300 }]; },
+    },
+    renderer: { sample() {}, disposeHeavyVfx() {} },
+    audio: null,
+    music: null,
+    lavender: {
+      setRevealProgress() {},
+      lookAtWorldPoint(...target) { gazeCalls.push(target); },
+    },
+    view: { renderFrame() {} },
+    storage: null,
+  });
+  controller.state = 'running';
+  controller.revealed = true;
+  controller.lamentStarted = true;
+
+  controller.sample(7.00);
+  controller.sample(7.01);
+
+  assert.equal(targetReads, 1);
+  assert.equal(gazeCalls.length, 1);
 });
