@@ -496,6 +496,17 @@ export class CosmicEventController {
     this.rafId = null;
     this.music?.keepPlayingThroughIdle?.();
     this.state = 'idle';
+    // The opt-in preview listens only after the canonical Lavender actor reaches
+    // its melancholic idle. Production pages never dispatch this rehearsal event.
+    if (globalThis.location?.search && new URLSearchParams(globalThis.location.search).get('previewNarrative') === '1') {
+      globalThis.dispatchEvent?.(new CustomEvent('chispa:cosmic-idle', {
+        detail: {
+          lavender: this.lavender,
+          music: this.music,
+          getResidualTargets: () => this.fracture?.getResidualTargets?.() ?? [],
+        },
+      }));
+    }
   }
 
   dispose() {
