@@ -45,12 +45,12 @@
     "feel": "confess",
     "cue": "thinking",
     "lines": [
-      "En Apocalypse, de Cigarettes After Sex, hay una parte que me hace pensar justo en eso.",
-      "Dice: «Come on and haunt me».",
-      "No sé cómo explicártelo, pero hay días en los que me identifico mucho con esas palabras.",
-      "Porque, aunque decidimos soltarnos, a veces sí quisiera que volviéramos a encontrarnos. No sé cuándo ni cómo, pero hay momentos en los que todavía me gustaría volver a verte.",
-      "Y no te lo digo para pedirte que me busques, ni porque espere que lo hagas. Simplemente es algo que todavía siento.",
-      "Y me cuesta admitirlo porque también quiero que estés bien, que sigas con tu vida y que no sientas que tienes que volver a mirar hacia atrás."
+      "En Apocalypse, de Cigarettes After Sex, hay una parte que me hace sentir justo así.",
+      "Esa donde dice «Come on and haunt me».",
+      "No sé, a veces quisiera que volviéramos a encontrarnos. Quisiera volver a verte, aunque fuera una sola vez.",
+      "Me duele pensarlo porque sé que decidimos soltarnos y que eso significa respetar la vida que cada uno está tratando de llevar.",
+      "No te digo esto para pedirte que me busques. Sé lo que acordamos y quiero respetarlo.",
+      "Simplemente hay días en los que todavía te extraño muchísimo, y me cuesta aceptar que tal vez no vuelva a verte."
     ]
   },
   {
@@ -118,7 +118,7 @@
       "No quiero que sientas que tienes que hacer algo con estas palabras. No te estoy pidiendo que vuelvas, ni que me esperes, ni que cambies el rumbo de tu vida.",
       "Si algún día nuestros caminos vuelven a encontrarse, quisiera que fuera porque ambos lo deseamos, no porque alguno se sintiera obligado a regresar.",
       "Y si ese día nunca llega, también tendré que aprender a vivir con ello.",
-      "Solo espero que la vida te trate con toda la ternura que yo no siempre supe darte."
+      "Y aunque me duela admitirlo, entiendo que quizá ya no volvamos a estar juntos. No es lo que yo quisiera, pero lo acepto. Todavía te quiero y me pesa muchísimo lo que pasó entre nosotros. Perdón por todo lo que te hice. Espero que estés bien, de verdad."
     ]
   }
 ]);
