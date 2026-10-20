@@ -299,6 +299,15 @@
       this.stageStartedAt = 0;
       this.ambientPhase = Math.round(Math.random() * 500);
       this.lastRenderAt = 0;
+      // Lavender's SVG rig renders detailed path geometry. Keep its complete
+      // expressions but reduce post-cinematic redraws on battery-limited phones.
+      const coarse = Boolean(window.matchMedia?.('(pointer: coarse)')?.matches || window.innerWidth <= 760);
+      this.narrativeMobile = coarse;
+      this.originalLavenderMaxFps = this.lavender?.engine?.performance?.maxFps ?? null;
+      const performance = this.lavender?.engine?.performance;
+      if (performance && Number.isFinite(performance.maxFps)) {
+        performance.maxFps = Math.min(performance.maxFps, coarse ? 18 : 30);
+      }
 
       this.root = document.createElement('div');
       this.root.id = 'chispa-lavender-dialogue';
@@ -550,11 +559,11 @@
     positionTick(now) {
       if (this.destroyed || this.ended) return;
       this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
-      if (now - this.lastRenderAt >= 65 && !document.hidden) {
+      if (now - this.lastRenderAt >= (this.narrativeMobile ? 100 : 65) && !document.hidden) {
         this.lastRenderAt = now;
         this.updateStage(now);
       }
-      if (now - this.lastPositionAt < 110 || !this.page || document.hidden) return;
+      if (now - this.lastPositionAt < (this.narrativeMobile ? 200 : 110) || !this.page || document.hidden) return;
       this.lastPositionAt = now;
       this.place();
     }
@@ -646,6 +655,11 @@
     }
     finish() {
       this.ended = true;
+      // Only the slow breathing and glances remain after the final letter.
+      const performance = this.lavender?.engine?.performance;
+      if (performance && Number.isFinite(performance.maxFps)) {
+        performance.maxFps = Math.min(performance.maxFps, this.narrativeMobile ? 12 : 24);
+      }
       this.clearActingTimers();
       this.root.classList.remove('is-visible');
       if (this.positionRaf) cancelAnimationFrame(this.positionRaf);
@@ -679,6 +693,9 @@
       this.positionRaf = 0;
       this.returnRaf = 0;
       this.vocals.destroy();
+      if (Number.isFinite(this.originalLavenderMaxFps) && this.lavender?.engine?.performance) {
+        this.lavender.engine.performance.maxFps = this.originalLavenderMaxFps;
+      }
       document.removeEventListener('visibilitychange', this.onVisibility);
       window.removeEventListener('resize', this.onResize);
       window.removeEventListener('pagehide', this.onPageHide);
