@@ -30,7 +30,9 @@ export class PageMusicDirector {
       || doc?.defaultView?.navigator?.connection?.saveData,
     );
     this.legacyElements = Array.from(legacyElements || []).filter(Boolean);
-    this.gainValue = Math.max(0, Math.min(1, Number(gain) || 0));
+    // Prairie's source recording is ~17 dB quieter than Yo Quisiera.
+    // Preview-only headroom allows a musical match without recompressing it.
+    this.gainValue = Math.max(0, Math.min(outroUrl ? 8 : 1, Number(gain) || 0));
     this.track = null;
     this.source = null;
     this.gainNode = null;
