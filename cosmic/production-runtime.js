@@ -146,14 +146,32 @@ export async function createProductionCosmicController({
     gain: 0.34,
     outputGain: 0.82,
   });
+  const narrativePreview = new URLSearchParams(win?.location?.search ?? '').get('previewNarrative') === '1';
+  const prairieUrl = new URL('assets/music/viento-en-la-pradera.mp3', siteRoot).href;
+  const quisieraUrl = new URL('assets/music/yo-quisiera.mp3', siteRoot).href;
+  // The originals are attached to this chat, but GitHub must contain both
+  // files before a public preview can reference them. Until then preserve
+  // the working soundtrack rather than failing the entire cinematic boot.
+  let narrativeScoreAvailable = false;
+  if (narrativePreview && typeof win?.fetch === 'function') {
+    const checks = await Promise.allSettled([prairieUrl, quisieraUrl].map((url) =>
+      win.fetch(url, { method: 'HEAD', cache: 'no-store' }).then((response) => response.ok)
+    ));
+    narrativeScoreAvailable = checks.every((check) => check.status === 'fulfilled' && check.value === true);
+    if (!narrativeScoreAvailable) {
+      console.warn('[Chispa][Score] The uploaded soundtrack is not yet in GitHub. Retaining the original music for this preview.');
+    }
+  }
   const music = new deps.PageMusicDirector({
-    url: new URL('assets/music/dandara-legacy.mp3', siteRoot).href,
+    url: narrativeScoreAvailable ? prairieUrl : new URL('assets/music/dandara-legacy.mp3', siteRoot).href,
+    outroUrl: narrativeScoreAvailable ? quisieraUrl : null,
     audioContext: audio.ensureContext(),
     output: audio.getMixOutput(),
     doc,
     legacyElements: ambientElements,
     gain: 0.68,
   });
+  music.narrativePreviewScore = narrativeScoreAvailable;
   const lavender = new deps.ChispaLavenderHost({
     container: lavenderStage,
     Engine,
