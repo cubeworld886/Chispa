@@ -1,128 +1,146 @@
-/* Canonical LavenderSpeechBubble-inspired DOM port.
- * The actor and its animation remain the original LavenderSvgEngine.
- * Shape, tail, glow, 470ms entrance and ~27-39ms typing mirror Lyra POS.
+/* Chispa: native-style Lavender speech bubbles.
+ * The canonical Lavender SVG engine, geometry, stage and cinema stay unchanged.
+ * A fixed pre-laid-out word/letter tree prevents ALL typing reflow.
  */
 #chispa-lavender-dialogue.lnv-bubble {
-  --lnv-fill: rgba(37, 25, 57, .965);
-  --lnv-line: rgba(198, 172, 255, .78);
-  --lnv-glow: rgba(169, 140, 255, .24);
-  --lnv-text: #f7f3ff;
+  --lnv-fill: rgba(19, 14, 33, .955);
+  --lnv-line: rgba(199, 168, 248, .54);
+  --lnv-glow: rgba(165, 130, 234, .13);
+  --lnv-text: rgba(251, 246, 255, .975);
   box-sizing: border-box;
   position: fixed;
   left: 0;
   top: 0;
-  width: 286px;
-  min-width: 180px;
+  width: 230px;
   height: auto;
+  min-width: 156px;
   z-index: 1100;
-  border: 1.1px solid var(--lnv-line);
+  border: 1px solid var(--lnv-line);
   border-radius: 18px;
-  padding: 15px 17px 19px;
+  padding: 17px 17px 19px;
   text-align: left;
   color: var(--lnv-text);
-  background: var(--lnv-fill);
-  box-shadow: 0 0 12px var(--lnv-glow), 0 0 26px rgba(169, 140, 255, .10), 0 9px 30px rgba(0, 0, 0, .25);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
+  background:
+    linear-gradient(148deg, rgba(89, 59, 120, .12), transparent 54%),
+    radial-gradient(ellipse at 92% -35%, rgba(161, 114, 210, .18), transparent 63%),
+    var(--lnv-fill);
+  box-shadow:
+    0 0 0 1px rgba(250, 241, 255, .025) inset,
+    0 11px 32px rgba(0,0,0,.42),
+    0 0 28px var(--lnv-glow);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(5px) scale(.985);
-  transform-origin: 50% 100%;
+  transform: translateY(6px) scale(.955);
+  transform-origin: 98% 66%;
   pointer-events: none;
   contain: layout style;
-  transition: opacity .30s ease, visibility .30s, transform .30s ease, left .18s ease-out, top .18s ease-out;
+  transition:
+    opacity .32s ease,
+    visibility .32s ease,
+    transform .32s ease,
+    left .14s ease-out,
+    top .14s ease-out;
 }
 #chispa-lavender-dialogue.lnv-bubble.is-visible {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
-  transition: opacity .16s ease, visibility 0s, transform .47s cubic-bezier(.18,1.35,.36,1), left .18s ease-out, top .18s ease-out;
+  transition:
+    opacity .24s ease,
+    visibility 0s,
+    transform .47s cubic-bezier(.20,1.24,.35,1),
+    left .14s ease-out,
+    top .14s ease-out;
 }
 #chispa-lavender-dialogue.lnv-bubble::before {
   position: absolute;
   top: 5px;
-  left: 9px;
-  right: 9px;
-  height: 14px;
+  left: 10px;
+  right: 10px;
+  height: 12px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,0));
-  content: "";
+  background: linear-gradient(180deg, rgba(244,224,255,.085), transparent);
+  content: '';
   pointer-events: none;
 }
 #chispa-lavender-dialogue.lnv-bubble::after {
   position: absolute;
   display: block;
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   background: var(--lnv-fill);
   border: 0 solid var(--lnv-line);
-  border-width: 0 1.1px 1.1px 0;
-  transform: rotate(45deg);
-  content: "";
+  border-width: 0 1px 1px 0;
+  content: '';
   pointer-events: none;
 }
-#chispa-lavender-dialogue.lnv-bubble[data-side="above"]::after {
-  bottom: -7px;
-  left: calc(var(--lnv-tail-at, 48%) - 6px);
-}
-#chispa-lavender-dialogue.lnv-bubble[data-side="below"]::after {
-  top: -7px;
-  left: calc(var(--lnv-tail-at, 48%) - 6px);
-  transform: rotate(225deg);
-}
-#chispa-lavender-dialogue.lnv-bubble[data-side="right"]::after {
-  top: calc(var(--lnv-tail-at, 63%) - 6px);
-  left: -7px;
-  transform: rotate(135deg);
-}
-#chispa-lavender-dialogue.lnv-bubble[data-side="left"]::after {
-  top: calc(var(--lnv-tail-at, 63%) - 6px);
-  right: -7px;
+#chispa-lavender-dialogue.lnv-bubble[data-side='left']::after {
+  top: calc(var(--lnv-tail-at, 60px) - 6px);
+  right: -6px;
   transform: rotate(-45deg);
 }
-#chispa-lavender-dialogue.lnv-bubble[data-feel="regret"],
-#chispa-lavender-dialogue.lnv-bubble[data-feel="farewell"] {
-  --lnv-line: rgba(182, 157, 225, .72);
-  --lnv-glow: rgba(148, 120, 202, .15);
+#chispa-lavender-dialogue.lnv-bubble[data-side='right']::after {
+  top: calc(var(--lnv-tail-at, 60px) - 6px);
+  left: -6px;
+  transform: rotate(135deg);
 }
-#chispa-lavender-dialogue.lnv-bubble[data-feel="tender"] {
-  --lnv-line: rgba(208, 177, 255, .84);
+#chispa-lavender-dialogue.lnv-bubble[data-side='above']::after {
+  left: calc(var(--lnv-tail-at, 50%) - 6px);
+  bottom: -6px;
+  transform: rotate(45deg);
+}
+#chispa-lavender-dialogue.lnv-bubble[data-side='below']::after {
+  left: calc(var(--lnv-tail-at, 50%) - 6px);
+  top: -6px;
+  transform: rotate(225deg);
+}
+#chispa-lavender-dialogue.lnv-bubble[data-feel='regret'],
+#chispa-lavender-dialogue.lnv-bubble[data-feel='farewell'] {
+  --lnv-line: rgba(161, 137, 216, .47);
+  --lnv-glow: rgba(119, 90, 173, .09);
+}
+#chispa-lavender-dialogue.lnv-bubble[data-feel='tender'] {
+  --lnv-line: rgba(209, 183, 255, .63);
+  --lnv-glow: rgba(191, 155, 240, .18);
 }
 #chispa-lavender-dialogue .lnv-copy {
   position: relative;
-  box-sizing: border-box;
-  min-height: 24px;
-  font: 400 14px / 1.56 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  letter-spacing: .005em;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-  text-wrap: pretty;
-}
-#chispa-lavender-dialogue .lnv-ghost {
   display: block;
-  visibility: hidden;
-  width: 100%;
-  white-space: inherit;
-  overflow-wrap: inherit;
+  box-sizing: border-box;
+  min-height: 22px;
+  font: 400 14px / 1.56 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: .001em;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-wrap: wrap;
+  -webkit-font-smoothing: antialiased;
 }
 #chispa-lavender-dialogue .lnv-written {
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  white-space: inherit;
-  overflow-wrap: inherit;
+  position: relative;
+  width: 100%;
+  white-space: normal;
 }
+#chispa-lavender-dialogue .lnv-word {
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+#chispa-lavender-dialogue .lnv-letter {
+  opacity: 0;
+  transition: opacity .075s linear;
+}
+#chispa-lavender-dialogue .lnv-letter.is-revealed { opacity: 1; }
 #chispa-lavender-dialogue .lnv-spark {
   display: block;
   position: absolute;
-  right: 10px;
+  right: 9px;
   bottom: 7px;
-  color: rgba(204, 174, 252, .8);
-  font: 400 11px / 1 system-ui, sans-serif;
-  animation: lnv-spark-pulse .76s ease-in-out infinite alternate;
+  color: rgba(205, 175, 247, .75);
+  font: 400 10px / 1 system-ui, sans-serif;
+  animation: lnv-spark-pulse .9s ease-in-out infinite alternate;
   pointer-events: none;
 }
 #chispa-lavender-dialogue .lnv-spark[hidden] { display: none !important; }
@@ -138,12 +156,13 @@
   clip-path: inset(50%);
 }
 @keyframes lnv-spark-pulse {
-  from { opacity: .28; transform: scale(.89); }
-  to { opacity: .94; transform: scale(1.12); }
+  from { opacity: .28; transform: scale(.9); }
+  to { opacity: .9; transform: scale(1.09); }
 }
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   #chispa-lavender-dialogue.lnv-bubble {
-    padding: 13px 15px 17px;
+    padding: 14px 15px 16px;
+    border-radius: 17px;
   }
   #chispa-lavender-dialogue .lnv-copy {
     font-size: 13.5px;
@@ -156,5 +175,6 @@
     transition: opacity .12s linear, visibility .12s linear;
     transform: none;
   }
+  #chispa-lavender-dialogue .lnv-letter { transition: none; }
   #chispa-lavender-dialogue .lnv-spark { animation: none; }
 }
