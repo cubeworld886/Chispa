@@ -429,10 +429,11 @@
       try {
         rig.setState?.(state);
         const softer = state === 'lament' || state === 'concerned';
-        rig.setHeadTurn?.(state === 'curious' || state === 'thinking' ? -.060 : state === 'relieved' ? .035 : -.015);
-        const thinkingMorph = state === 'thinking';
-        rig.setCinematicFocus?.(thinkingMorph ? .26 : state === 'relieved' ? .21 : .13);
-        rig.setOrientationYaw?.(thinkingMorph ? -.08 : state === 'curious' ? -.17 : state === 'attentive' ? -.21 : state === 'relieved' ? .08 : -.035);
+        // Keep Lavender's canonical silhouette facing forward. Only give her
+        // eyes a very small leftward glance; never rotate or skew her body.
+        rig.setHeadTurn?.(0);
+        rig.setOrientationYaw?.(0);
+        rig.setCinematicFocus?.(.13);
         rig.setSceneMotion?.({
           orbitOpacity: softer ? .25 : .38,
           crescentOpacity: softer ? .26 : .39,
@@ -443,11 +444,11 @@
         if (state === 'lament' || state === 'concerned') {
           this.lavender.lookDown?.();
         } else if (state === 'thinking' || state === 'confused') {
-          this.lavender.lookAtWorldPoint?.(.36, .47, { normalized: true });
+          this.lavender.lookAtWorldPoint?.(.465, .49, { normalized: true });
         } else {
           // Lavender occasionally reads her own bubble rather than looking
           // into the camera for every single sentence.
-          this.lavender.lookAtWorldPoint?.(.27, .49, { normalized: true });
+          this.lavender.lookAtWorldPoint?.(.465, .50, { normalized: true });
         }
       } catch (error) {
         console.warn('[Chispa][Lavender] Acting beat failed', error);
