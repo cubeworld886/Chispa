@@ -277,6 +277,7 @@ export class PageMusicDirector {
       }
       this.currentPrimaryGain = 0;
       this.primaryFadeActive = false;
+      this.outroFadeEndsAt = now + fadeIn;
       this.outroStarted = true;
       return true;
     } catch (error) {
