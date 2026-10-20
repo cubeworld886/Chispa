@@ -179,7 +179,13 @@ export class PageMusicDirector {
       this.outroTrack.preload = 'auto';
       try {
         this.outroPrimingPromise = Promise.resolve(this.outroTrack.play?.()).then(() => {
+          if (this.destroyed) return false;
           this.outroPrimed = true;
+          // iOS has now authorized this media element through Entrar.
+          // Pause its muted decoder until the last seven bubbles: otherwise
+          // it loops the whole song invisibly for several minutes.
+          this.outroTrack.pause?.();
+          try { this.outroTrack.currentTime = 0; } catch {}
           return true;
         }, (error) => {
           console.warn('[Chispa] Outro preflight deferred by browser.', error);
@@ -281,6 +287,14 @@ export class PageMusicDirector {
       this.primaryFadeActive = false;
       this.outroFadeEndsAt = now + fadeIn;
       this.outroStarted = true;
+      // Once the crossfade finishes, stop decoding the inaudible 23MB
+      // prairie loop. Do not touch the visible song or the sound effects.
+      this.ambientPauseTimer = globalThis.setTimeout?.(() => {
+        this.ambientPauseTimer = null;
+        if (!this.destroyed && this.outroStarted && !this.outroTrack?.paused) {
+          this.track?.pause?.();
+        }
+      }, 4700) ?? null;
       return true;
     } catch (error) {
       console.warn('[Chispa] Outro crossfade could not be scheduled.', error);
@@ -295,6 +309,10 @@ export class PageMusicDirector {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    if (this.ambientPauseTimer != null) {
+      globalThis.clearTimeout?.(this.ambientPauseTimer);
+      this.ambientPauseTimer = null;
+    }
     try { this.gainNode?.gain?.cancelScheduledValues?.(this.audioContext?.currentTime ?? 0); } catch {}
     try { this.outroGainNode?.gain?.cancelScheduledValues?.(this.audioContext?.currentTime ?? 0); } catch {}
     try { this.outroTrack?.pause?.(); } catch {}
