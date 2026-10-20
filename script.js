@@ -860,7 +860,9 @@ document.querySelectorAll(".close-info").forEach(btn => {
   // 60 full-screen canvas clears per second for several minutes.
   let narrativeIdle = false;
   const MAX_SKY_FPS = lowPowerMode ? 24 : 40;
-  const NARRATIVE_SKY_FPS = lowPowerMode ? 12 : 24;
+  // Keep meteors perceptually fluid while the much cheaper word-bubbles render.
+  // The sky still runs far below the original uncapped refresh rate on phones.
+  const NARRATIVE_SKY_FPS = 24;
   window.addEventListener("chispa:cosmic-idle", () => {
     narrativeIdle = true;
     last = 0;
