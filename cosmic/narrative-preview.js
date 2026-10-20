@@ -19,12 +19,12 @@
     {
       label: 'III · Apocalypse',
       cue: 'confess',
-      text: 'Hay otra canción que me recuerda a ti. Apocalypse, de Cigarettes After Sex. Siempre me ha conmovido esa petición tan extraña de que alguien vuelva a rondarnos, como un recuerdo que se resiste a desaparecer. Creo que, a veces, yo también he deseado eso.'
+      text: 'Hay otra canción que me recuerda a ti. Apocalypse, de Cigarettes After Sex. Hay una parte que escucho como una súplica a alguien que se fue: vuelve a rondarme, aunque sea solo como un recuerdo. Y no te voy a mentir. A veces una parte de mí también desea eso. Que de algún modo vuelvas a encontrarme, aunque yo no pueda buscarte.'
     },
     {
       label: 'IV · Encontrarme',
       cue: 'hope',
-      text: 'Que vuelvas a encontrarme alguna vez. No porque debas hacerlo, y mucho menos porque quiera impedirte seguir con tu vida. Sé lo que decidimos. Simplemente hay días en los que me gustaría volver a saber de ti. Y no siempre sé cómo decirlo sin que suene contradictorio.'
+      text: 'Pero no quiero que confundas ese deseo con una petición. Sé que elegimos soltarnos y quiero respetarlo. Solo intento explicarte una contradicción que todavía llevo dentro: puedo desearte paz, incluso lejos de mí, y al mismo tiempo seguir extrañándote.'
     },
     {
       label: 'V · Las raíces',
