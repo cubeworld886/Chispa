@@ -149,7 +149,7 @@ export async function createProductionCosmicController({
   // Both supplied audio files are now verified, original, and present in the
   // preview branch. Select them directly without a fragile mobile HEAD probe.
   // main continues to use its original soundtrack.
-  const narrativeScoreAvailable = new URLSearchParams(win?.location?.search ?? '').get('previewNarrative') === '1';
+  const narrativeScoreAvailable = true;
   const prairieUrl = new URL('assets/music/viento-en-la-pradera.mp3', siteRoot).href;
   const quisieraUrl = new URL('assets/music/yo-quisiera.mp3', siteRoot).href;
   const music = new deps.PageMusicDirector({
