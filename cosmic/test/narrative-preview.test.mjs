@@ -214,7 +214,10 @@ test('the full text stays fixed with lightweight word-level reveal, without expe
   const bubble = scene.document.body.children[0];
   const preTypingHeight = bubble.offsetHeight;
   const preTypingNodes = bubble.querySelector('.lnv-written').children.length;
-  for (let i = 0; i < 14; i += 1) scene.next();
+  // Only sample while the first bubble is being written. Word-level typing
+  // is faster than the old per-glyph renderer, so 14 callbacks reach page 2.
+  for (let i = 0; i < 3; i += 1) scene.next();
+  assert.equal(scene.window.__chispaNarrativePreview.getStatus().index, 0);
   assert.equal(bubble.offsetHeight, preTypingHeight);
   assert.equal(bubble.querySelector('.lnv-written').children.length, preTypingNodes);
   assert.ok(scene.window.__chispaNarrativePreview.getStatus().typed > 0);
