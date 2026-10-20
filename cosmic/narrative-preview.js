@@ -123,79 +123,137 @@
   }
 ]);
 
-  const CUE_FILES = Object.freeze({
+  // The original expressive states, authored in the canonical Lavender motion rig.
+  // Short beats always flow back to lament so her slow natural breathing survives.
+  const ACTING = Object.freeze({
+    heavy: ['curious','thinking','confused','curious','concerned','lament','thinking'],
+    encuentro: ['attentive','thinking','lament','concerned','concerned','lament','concerned','thinking','attentive'],
+    apocalypse: ['curious','thinking','concerned','lament','attentive','relieved'],
+    culpa: ['concerned','lament','lament','concerned','lament','thinking','lament'],
+    'volver-a-vernos': ['thinking','attentive','thinking','relieved','attentive','relieved','thinking','lament','thinking','lament','attentive','thinking','lament'],
+    raices: ['lament','thinking','attentive','lament','thinking','attentive','lament','thinking','lament','attentive'],
+    despedida: ['lament','thinking','lament','attentive','relieved','relieved','concerned','attentive','lament','relieved'],
+  });
+
+  // The cues are approved recordings from Lyra POS, never synthesized speech.
+  // They are chapter/meaning-specific rather than playing for every sentence.
+  const VOCAL_FILES = Object.freeze({
     hello: 'assets/lavender/sfx/lavender_hello.wav',
     talking: 'assets/lavender/sfx/lavender_talking.wav',
     thinking: 'assets/lavender/sfx/lavender_thinking.wav',
+    yes: 'assets/lavender/sfx/lavender_yes.wav',
+    no: 'assets/lavender/sfx/lavender_no.wav',
+    absorb: 'assets/lavender/sfx/lavender_absorb.wav',
+    excited: 'assets/lavender/sfx/lavender_excited.wav',
+    laugh: 'assets/lavender/sfx/lavender_laugh.wav',
+    sad: 'assets/cosmic/sfx/lavender-sad.wav',
   });
-  const CUE_LEVELS = Object.freeze({ hello: 0.16, talking: 0.11, thinking: 0.12 });
+  const VOCAL_LEVELS = Object.freeze({
+    hello: .23, talking: .19, thinking: .20, yes: .18, no: .17,
+    absorb: .19, excited: .16, laugh: .13, sad: .17,
+  });
+  const CUE_BEATS = Object.freeze({
+    heavy: { 0:'hello', 4:'thinking' },
+    encuentro: { 1:'yes', 5:'no', 8:'talking' },
+    apocalypse: { 0:'thinking', 2:'absorb', 5:'sad' },
+    culpa: { 0:'sad', 4:'no' },
+    'volver-a-vernos': { 0:'thinking', 3:'excited', 5:'laugh', 8:'absorb', 12:'talking' },
+    raices: { 0:'absorb', 3:'yes', 7:'thinking' },
+    despedida: { 0:'sad', 3:'talking', 6:'thinking', 9:'absorb' },
+  });
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const nowMs = () => globalThis.performance?.now?.() ?? Date.now();
 
-  function paragraphsToPages() {
+  function pagesFromSections() {
     return SECTIONS.flatMap((section, sectionIndex) => section.lines.map((text, lineIndex) => Object.freeze({
       text, feel: section.feel, section: section.key, sectionIndex, lineIndex,
-      cue: lineIndex === 0 ? section.cue : null,
-      pause: lineIndex === section.lines.length - 1 ? 1650 : 840,
+      acting: ACTING[section.key]?.[lineIndex] ?? 'lament',
+      vocal: CUE_BEATS[section.key]?.[lineIndex] ?? null,
+      pause: lineIndex === section.lines.length - 1 ? 1600 : 800,
     })));
   }
-  const PAGES = Object.freeze(paragraphsToPages());
+  const PAGES = Object.freeze(pagesFromSections());
 
   class GentleVocalDirector {
-    constructor(audio) {
-      this.audio = audio;
+    constructor(audio, music) {
       this.context = audio?.context ?? null;
       this.destination = audio?.getMixOutput?.() ?? this.context?.destination ?? null;
+      this.music = music;
       this.buffers = new Map();
       this.ready = null;
       this.lastAt = -Infinity;
+      this.cuesPlayed = 0;
       this.activeSources = new Set();
       this.destroyed = false;
     }
     preload() {
       if (this.ready) return this.ready;
       if (!this.context || !this.destination) return Promise.resolve(false);
-      this.ready = Promise.allSettled(Object.entries(CUE_FILES).map(async ([key, path]) => {
+      this.ready = Promise.allSettled(Object.entries(VOCAL_FILES).map(async ([key, path]) => {
         const response = await fetch(new URL(path, document.baseURI).href);
-        if (!response.ok) throw new Error('No se pudo descargar el sonido original ' + key);
-        const data = await response.arrayBuffer();
-        const buffer = await this.context.decodeAudioData(data);
-        if (this.destroyed) return;
-        this.buffers.set(key, buffer);
+        if (!response.ok) throw new Error('No se pudo descargar ' + key + ': HTTP ' + response.status);
+        const wav = await response.arrayBuffer();
+        const buffer = await this.context.decodeAudioData(wav);
+        if (!this.destroyed) this.buffers.set(key, buffer);
       })).then((results) => {
-        for (const item of results) {
-          if (item.status === 'rejected') console.warn('[Chispa][Lavender] Sonido canónico no disponible.', item.reason);
+        for (const result of results) {
+          if (result.status === 'rejected') console.warn('[Chispa][Lavender] Audio omitido.', result.reason);
         }
+        console.info('[Chispa][Lavender] Vocalizaciones preparadas:', this.buffers.size);
         return this.buffers.size > 0;
       });
       return this.ready;
     }
-    play(key) {
-      if (this.destroyed || !this.context || this.context.state !== 'running') return;
-      if (!key || !this.buffers.has(key)) return;
+    play(key, stillRelevant = () => true) {
+      if (this.destroyed || !key || !VOCAL_FILES[key]) return false;
+      if (!this.buffers.has(key)) {
+        // Safari can defer small audio fetches. Replay only while this same
+        // passage is still being shown; never voice an old page later.
+        this.ready?.then(() => {
+          if (!this.destroyed && stillRelevant() && this.buffers.has(key)) this.play(key, stillRelevant);
+        }).catch(() => {});
+        return false;
+      }
+      if (!stillRelevant() || !this.context || this.context.state !== 'running') return false;
       const at = this.context.currentTime;
-      if (at - this.lastAt < 24) return;
-      this.lastAt = at;
+      if (at - this.lastAt < 15) return false;
+      const buffer = this.buffers.get(key);
+      if (!buffer || buffer.duration <= 0) return false;
       try {
         const source = this.context.createBufferSource();
         const gain = this.context.createGain();
-        source.buffer = this.buffers.get(key);
-        const volume = CUE_LEVELS[key] ?? 0.10;
-        const duration = source.buffer.duration;
+        const level = VOCAL_LEVELS[key] ?? .17;
+        const duration = buffer.duration;
+        source.buffer = buffer;
         gain.gain.setValueAtTime(0, at);
-        gain.gain.linearRampToValueAtTime(volume, at + 0.055);
-        gain.gain.setValueAtTime(volume, at + Math.max(.06, duration - .20));
+        gain.gain.linearRampToValueAtTime(level, at + .06);
+        gain.gain.setValueAtTime(level, at + Math.max(.08, duration - .22));
         gain.gain.linearRampToValueAtTime(0, at + duration);
         source.connect(gain);
         gain.connect(this.destination);
+        const musicGain = this.music?.gainNode?.gain;
+        if (musicGain && this.music?.primed && !this.music.destroyed) {
+          const base = this.music.gainValue ?? .68;
+          // Mild side-chain duck for the brief non-verbal reaction, not a pause.
+          musicGain.cancelScheduledValues(at);
+          musicGain.setValueAtTime(base, at);
+          musicGain.linearRampToValueAtTime(base * .84, at + .10);
+          musicGain.setValueAtTime(base * .84, at + Math.max(.11, duration - .10));
+          musicGain.linearRampToValueAtTime(base, at + duration + .30);
+        }
+        this.lastAt = at;
+        this.cuesPlayed += 1;
         this.activeSources.add(source);
         source.onended = () => {
           this.activeSources.delete(source);
           try { source.disconnect(); gain.disconnect(); } catch {}
         };
         source.start(at);
+        return true;
       } catch (error) {
-        console.warn('[Chispa][Lavender] Sonido discreto omitido.', error);
+        console.warn('[Chispa][Lavender] No se pudo reproducir ' + key, error);
+        return false;
       }
     }
     destroy() {
@@ -209,16 +267,20 @@
   }
 
   class LavenderDialogueDirector {
-    constructor({ lavender, audio, music }) {
+    constructor({ lavender, audio, music, getResidualTargets }) {
       this.lavender = lavender;
       this.music = music;
-      this.vocals = new GentleVocalDirector(audio);
+      this.residualTargets = getResidualTargets ?? (() => []);
+      this.vocals = new GentleVocalDirector(audio, music);
       this.index = -1;
       this.charIndex = 0;
       this.page = null;
       this.clusters = [];
+      this.letters = [];
       this.timer = null;
+      this.actingTimers = new Set();
       this.positionRaf = 0;
+      this.returnRaf = 0;
       this.lastPositionAt = 0;
       this.bubbleSize = { width: 0, height: 0 };
       this.lastPosition = { x: NaN, y: NaN, side: null };
@@ -226,42 +288,55 @@
       this.started = false;
       this.destroyed = false;
       this.waitingVisibility = false;
+      this.currentActing = 'lament';
+      this.initialCenterX = lavender?.baseSceneView?.centerX ?? .5;
+      this.stageFromX = this.initialCenterX;
+      this.stageTargetX = this.targetCenterX();
+      this.stageStartedAt = 0;
+      this.ambientPhase = Math.round(Math.random() * 500);
+      this.lastRenderAt = 0;
 
       this.root = document.createElement('div');
       this.root.id = 'chispa-lavender-dialogue';
       this.root.className = 'lnv-bubble';
       this.root.setAttribute('role', 'group');
       this.root.setAttribute('aria-label', 'Palabras de Lavender');
-      this.root.setAttribute('data-side', 'above');
+      this.root.setAttribute('data-side', 'left');
       this.root.setAttribute('data-feel', 'curious');
       this.root.innerHTML =
         '<div class="lnv-copy">' +
-        ' <span class="lnv-ghost" aria-hidden="true"></span>' +
         ' <span class="lnv-written" aria-hidden="true"></span>' +
         '</div>' +
         '<span class="lnv-spark" aria-hidden="true">✦</span>' +
         '<span class="lnv-for-sr" role="status" aria-live="polite" aria-atomic="true"></span>';
       document.body.append(this.root);
-      this.ghost = this.root.querySelector('.lnv-ghost');
       this.written = this.root.querySelector('.lnv-written');
       this.spark = this.root.querySelector('.lnv-spark');
       this.sr = this.root.querySelector('.lnv-for-sr');
+
       this.onVisibility = this.onVisibility.bind(this);
       this.onResize = this.onResize.bind(this);
       this.onPageHide = this.destroy.bind(this);
       document.addEventListener('visibilitychange', this.onVisibility);
       window.addEventListener('resize', this.onResize, { passive: true });
       window.addEventListener('pagehide', this.onPageHide, { once: true });
-      // Do not pause, restart or replace the original Dandara score.
-      // This branch alone loops the existing score through the long letter.
+      // The actor stays truly animated by LavenderSvgEngine (not a static mock).
+      // Pause her random idle gazes to let the scripted acting beats be deliberate.
+      this.lavender?.idle?.stop?.();
+      this.lavender?.engine?.resumeAnimation?.();
+      this.lavender?.engine?.setState?.('lament');
       if (this.music?.track && !this.music.destroyed) this.music.track.loop = true;
       this.vocals.preload().catch(() => {});
+    }
+    targetCenterX() {
+      return window.innerWidth <= 640 ? .81 : this.initialCenterX;
     }
     start() {
       if (this.destroyed || this.started) return;
       this.started = true;
-      this.positionRaf = requestAnimationFrame((t) => this.positionTick(t));
-      this.schedule(() => this.advance(), 950);
+      this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
+      // Give Lavender time to move gently to her reading position.
+      this.schedule(() => this.advance(), reducedMotion ? 600 : (window.innerWidth <= 640 ? 2150 : 850));
     }
     schedule(fn, ms) {
       if (this.timer !== null) clearTimeout(this.timer);
@@ -271,101 +346,206 @@
         else if (!this.destroyed) this.waitingVisibility = true;
       }, ms);
     }
+    addActingTimer(fn, ms) {
+      const timer = window.setTimeout(() => {
+        this.actingTimers.delete(timer);
+        if (!this.destroyed && !this.ended && !document.hidden) fn();
+      }, ms);
+      this.actingTimers.add(timer);
+    }
+    clearActingTimers() {
+      for (const timer of this.actingTimers) clearTimeout(timer);
+      this.actingTimers.clear();
+    }
     actorRect() {
       try {
-        const r = this.lavender?.engine?.getActorScreenRect?.();
-        if (r && Number.isFinite(r.left) && Number.isFinite(r.top) && r.width > 0) {
-          return r;
-        }
+        const rect = this.lavender?.engine?.getActorScreenRect?.();
+        if (rect && Number.isFinite(rect.left) && rect.width > 0) return rect;
       } catch {}
-      const size = Math.max(65, Math.min(window.innerWidth, window.innerHeight) * 0.11);
+      const size = Math.max(65, Math.min(window.innerWidth, window.innerHeight) * .11);
       return {
         left: (window.innerWidth - size) / 2, top: (window.innerHeight - size) / 2,
         width: size, height: size, right: (window.innerWidth + size) / 2,
         bottom: (window.innerHeight + size) / 2,
       };
     }
-    applyPose(page) {
-      try {
-        if (page.feel === 'regret' || page.feel === 'farewell') {
-          this.lavender?.lookDown?.();
-        } else if (page.feel === 'confess') {
-          this.lavender?.lookAtWorldPoint?.(0.47, 0.59, { normalized: true });
-        } else if (page.feel === 'tender') {
-          this.lavender?.lookAtWorldPoint?.(0.53, 0.52, { normalized: true });
+    segmentText(input) {
+      if (globalThis.Intl?.Segmenter) {
+        const segmenter = new Intl.Segmenter('es', { granularity: 'grapheme' });
+        return Array.from(segmenter.segment(input), (part) => part.segment);
+      }
+      return Array.from(input);
+    }
+    createStableLetters(text) {
+      // All words and graphemes exist IN NORMAL FLOW before typing starts.
+      // Revealing their opacity cannot cause wrap changes or vertical jumping.
+      const fragment = document.createDocumentFragment();
+      const characters = [];
+      const letterNodes = [];
+      for (const token of text.match(/\s+|\S+/gu) ?? []) {
+        if (/^\s+$/u.test(token)) {
+          const node = document.createTextNode(token);
+          fragment.appendChild(node);
+          for (const ch of this.segmentText(token)) {
+            characters.push(ch);
+            letterNodes.push(null);
+          }
         } else {
-          this.lavender?.lookAtWorldPoint?.(0.51, 0.48, { normalized: true });
+          const word = document.createElement('span');
+          word.className = 'lnv-word';
+          for (const ch of this.segmentText(token)) {
+            const letter = document.createElement('span');
+            letter.className = 'lnv-letter';
+            letter.textContent = ch;
+            word.appendChild(letter);
+            characters.push(ch);
+            letterNodes.push(letter);
+          }
+          fragment.appendChild(word);
         }
-      } catch {}
+      }
+      this.written.replaceChildren(fragment);
+      this.clusters = characters;
+      this.letters = letterNodes;
+    }
+    performanceFor(page) {
+      return ACTING[page.section]?.[page.lineIndex] ?? 'lament';
+    }
+    act(page) {
+      const rig = this.lavender?.engine;
+      if (!rig) return;
+      this.clearActingTimers();
+      const state = this.performanceFor(page);
+      this.currentActing = state;
+      try {
+        rig.setState?.(state);
+        const softer = state === 'lament' || state === 'concerned';
+        rig.setHeadTurn?.(state === 'curious' || state === 'thinking' ? -.040 : state === 'relieved' ? .026 : -.010);
+        rig.setSceneMotion?.({
+          orbitOpacity: softer ? .25 : .38,
+          crescentOpacity: softer ? .26 : .39,
+          star0Opacity: softer ? .13 : .24,
+          star1Opacity: softer ? .11 : .20,
+          star2Opacity: softer ? .10 : .18,
+        });
+        if (state === 'lament' || state === 'concerned') {
+          this.lavender.lookDown?.();
+        } else if (state === 'thinking' || state === 'confused') {
+          this.lavender.lookAtWorldPoint?.(.36, .47, { normalized: true });
+        } else {
+          this.lavender.lookAtWorldPoint?.(.45, .52, { normalized: true });
+        }
+      } catch (error) {
+        console.warn('[Chispa][Lavender] Acting beat failed', error);
+      }
+      if (state !== 'lament') {
+        // Hold the expressive state long enough to act, then return to
+        // Lavender's long-breath canonical melancholy rather than freezing it.
+        const hold = clamp(1800 + page.text.length * 8, 2300, 3800);
+        this.addActingTimer(() => {
+          rig.setState?.('lament');
+          this.currentActing = 'lament';
+          if (page.feel === 'regret' || page.feel === 'farewell') this.lavender.lookDown?.();
+          else this.lavender.lookAtWorldPoint?.(.48, .53, { normalized: true });
+        }, hold);
+      } else {
+        this.addActingTimer(() => {
+          this.lavender.lookAtWorldPoint?.(.46, .55, { normalized: true });
+        }, clamp(1200 + page.text.length * 11, 1600, 3600));
+      }
     }
     advance() {
       if (this.destroyed || this.ended) return;
+      this.clearActingTimers();
       this.index += 1;
-      if (this.index >= PAGES.length) {
-        this.finish();
-        return;
-      }
+      if (this.index >= PAGES.length) return this.finish();
       this.page = PAGES[this.index];
       this.charIndex = 0;
-      this.clusters = typeof Intl?.Segmenter === 'function'
-        ? Array.from(new Intl.Segmenter('es', { granularity: 'grapheme' }).segment(this.page.text), (item) => item.segment)
-        : Array.from(this.page.text);
       this.root.classList.remove('is-visible', 'is-written');
       this.root.dataset.feel = this.page.feel;
-      this.ghost.textContent = this.page.text;
-      this.written.textContent = '';
+      this.createStableLetters(this.page.text);
       this.sr.textContent = this.page.text;
       this.spark.hidden = false;
       this.onResize();
-      this.applyPose(this.page);
-      if (this.page.cue) this.vocals.play(this.page.cue);
-      // Allow the speech bubble to arrive with the same 470ms
-      // organic entrance used in LavenderSpeechBubble.
+      this.act(this.page);
+      if (this.page.vocal) {
+        const currentPage = this.index;
+        this.vocals.play(this.page.vocal, () => this.index === currentPage && !this.destroyed && !this.ended);
+      }
       this.schedule(() => {
         this.root.classList.add('is-visible');
-        this.schedule(() => this.typeNext(), reducedMotion ? 180 : 470);
-      }, this.index === 0 ? 0 : 260);
+        this.schedule(() => this.typeNext(), reducedMotion ? 80 : 370);
+      }, this.index === 0 ? 0 : 190);
     }
     typeNext() {
       if (this.destroyed || !this.page) return;
       if (reducedMotion) {
-        this.written.textContent = this.page.text;
-        this.showComplete();
-        return;
+        for (const node of this.letters) if (node) node.classList.add('is-revealed');
+        this.charIndex = this.clusters.length;
+        return this.showComplete();
       }
-      if (this.charIndex >= this.clusters.length) {
-        this.showComplete();
-        return;
-      }
-      const next = this.clusters[this.charIndex];
-      this.written.textContent += next;
+      if (this.charIndex >= this.clusters.length) return this.showComplete();
+      const ch = this.clusters[this.charIndex];
+      const letter = this.letters[this.charIndex];
+      if (letter) letter.classList.add('is-revealed');
       this.charIndex += 1;
-      let delay = 27 + ((this.charIndex * 17 + this.index * 7) % 13);
-      if (next === ' ') delay = 18;
-      if (',;:'.includes(next)) delay += 70;
-      if ('.!?'.includes(next)) delay += 130;
-      if (next === '…') delay += 170;
+      let delay = 28 + ((this.charIndex * 17 + this.index * 7) % 12);
+      if (ch === ' ') delay = 18;
+      if (',;:'.includes(ch)) delay += 75;
+      if ('.!?'.includes(ch)) delay += 145;
+      if (ch === '…') delay += 170;
       this.schedule(() => this.typeNext(), delay);
     }
     showComplete() {
+      for (const node of this.letters) if (node) node.classList.add('is-revealed');
       this.spark.hidden = true;
       this.root.classList.add('is-written');
+      const words = this.page.text.trim().split(/\s+/u).length;
+      const hold = clamp(1750 + words * 220, 3350, 10200);
+      // Deliberate reading time AFTER the final character, not only during typing.
       this.schedule(() => {
         this.root.classList.remove('is-visible');
-        this.schedule(() => this.advance(), this.page?.pause ?? 840);
-      }, this.page?.text.length < 38 ? 1700 : 1450);
+        this.schedule(() => this.advance(), this.page?.pause ?? 800);
+      }, hold);
+    }
+    updateStage(now) {
+      if (!this.lavender?.baseSceneView || !this.lavender?.applyIdleDrift) return;
+      if (!this.stageStartedAt) this.stageStartedAt = now;
+      const progress = reducedMotion ? 1 : clamp((now - this.stageStartedAt) / 1850, 0, 1);
+      const easing = progress * progress * (3 - 2 * progress);
+      this.lavender.baseSceneView.centerX = this.stageFromX + (this.stageTargetX - this.stageFromX) * easing;
+      const slowBreathFloat = reducedMotion ? 0 : Math.sin((now + this.ambientPhase) / 2300) * .0023;
+      const driftX = reducedMotion ? 0 : Math.sin((now + this.ambientPhase) / 3600) * .0017;
+      this.lavender.applyIdleDrift(driftX, .012 + slowBreathFloat);
     }
     positionTick(now) {
       if (this.destroyed || this.ended) return;
-      this.positionRaf = requestAnimationFrame((t) => this.positionTick(t));
-      if (now - this.lastPositionAt < 95 || !this.page || document.hidden) return;
+      this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
+      if (now - this.lastRenderAt >= 65 && !document.hidden) {
+        this.lastRenderAt = now;
+        this.updateStage(now);
+      }
+      if (now - this.lastPositionAt < 110 || !this.page || document.hidden) return;
       this.lastPositionAt = now;
       this.place();
     }
     onResize() {
-      const w = Math.min(286, Math.max(180, window.innerWidth - 34));
-      this.root.style.width = w + 'px';
-      this.bubbleSize.width = w;
+      if (this.started) {
+        const target = this.targetCenterX();
+        if (target !== this.stageTargetX) {
+          this.stageFromX = this.lavender?.baseSceneView?.centerX ?? this.initialCenterX;
+          this.stageTargetX = target;
+          this.stageStartedAt = nowMs();
+        }
+      }
+      if (!this.page) return;
+      const vw = window.innerWidth;
+      const length = this.page.text.length;
+      const idealWidth = length < 45 ? 177 : length < 80 ? 205 : length < 125 ? 235 : 265;
+      const room = vw <= 640 ? Math.floor(vw * .81) - 54 : 320;
+      const width = clamp(idealWidth, 156, Math.min(vw - 28, room, vw <= 640 ? 265 : 305));
+      this.root.style.width = width + 'px';
+      this.bubbleSize.width = width;
       this.bubbleSize.height = this.root.offsetHeight || 0;
       this.place();
     }
@@ -374,47 +554,47 @@
       const r = this.actorRect();
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const safeTop = 14;
-      const safeBottom = 14;
-      const space = 20;
-      const bw = this.bubbleSize.width || 286;
-      const bh = this.bubbleSize.height || this.root.offsetHeight || 130;
-      const cx = r.left + r.width * .50;
-      const cy = r.top + r.height * .50;
-      const goRight = vw > 660 && r.right + space + bw < vw - 24;
-      const goLeft = vw > 660 && r.left - space - bw > 24;
-      let side = 'above';
-      let x;
-      let y;
-      if (goRight) {
-        side = 'right';
-        x = r.right + space;
-        y = cy - bh * .67;
-      } else if (goLeft) {
+      const padding = 14;
+      const space = 17;
+      const bw = this.bubbleSize.width || 220;
+      const bh = this.root.offsetHeight || this.bubbleSize.height || 130;
+      this.bubbleSize.height = bh;
+      const cx = r.left + r.width * .5;
+      const cy = r.top + r.height * .5;
+      const leftRoom = r.left - padding - space;
+      const rightRoom = vw - r.right - padding - space;
+      let side, x, y;
+      // The preferred visual is a left-side, anchored Lavender speech bubble.
+      if (leftRoom >= bw - 9) {
         side = 'left';
         x = r.left - space - bw;
-        y = cy - bh * .67;
+        y = cy - bh * .53;
+      } else if (rightRoom >= bw - 9) {
+        side = 'right';
+        x = r.right + space;
+        y = cy - bh * .53;
       } else {
         x = cx - bw * .50;
-        const availableAbove = r.top - safeTop - space;
-        const availableBelow = vh - safeBottom - r.bottom - space;
-        if (availableAbove >= bh || availableAbove >= availableBelow) {
-          side = 'above';
-          y = r.top - space - bh;
+        const above = r.top - padding - space;
+        const below = vh - padding - r.bottom - space;
+        if (above >= bh || above >= below) {
+          side = 'above'; y = r.top - space - bh;
         } else {
-          side = 'below';
-          y = r.bottom + space;
+          side = 'below'; y = r.bottom + space;
         }
       }
-      x = clamp(x, 12, Math.max(12, vw - bw - 12));
-      y = clamp(y, safeTop, Math.max(safeTop, vh - bh - safeBottom));
-      const anchor = side === 'above' || side === 'below'
-        ? clamp(cx - x, 24, bw - 24) : clamp(cy - y, 25, Math.max(25, bh - 25));
-      if (Math.abs(x - this.lastPosition.x) >= 0.4 || Math.abs(y - this.lastPosition.y) >= 0.4 || side !== this.lastPosition.side) {
+      x = clamp(x, padding, Math.max(padding, vw - bw - padding));
+      y = clamp(y, padding, Math.max(padding, vh - bh - padding));
+      const tail = side === 'left' || side === 'right'
+        ? clamp(cy - y, 23, Math.max(23, bh - 23))
+        : clamp(cx - x, 23, bw - 23);
+      if (Math.abs(x - this.lastPosition.x) > .5 ||
+          Math.abs(y - this.lastPosition.y) > .5 ||
+          side !== this.lastPosition.side) {
         this.root.style.left = x.toFixed(1) + 'px';
         this.root.style.top = y.toFixed(1) + 'px';
         this.root.dataset.side = side;
-        this.root.style.setProperty('--lnv-tail-at', anchor.toFixed(1) + 'px');
+        this.root.style.setProperty('--lnv-tail-at', tail.toFixed(1) + 'px');
         this.lastPosition = { x, y, side };
       }
     }
@@ -423,32 +603,52 @@
       if (document.hidden) {
         if (this.timer !== null) clearTimeout(this.timer);
         this.timer = null;
+        this.clearActingTimers();
         this.waitingVisibility = true;
       } else if (this.waitingVisibility) {
         this.waitingVisibility = false;
-        // Resume from the displayed character, never jump over an unread phrase.
-        if (!this.page) this.schedule(() => this.advance(), 250);
-        else if (this.charIndex >= this.clusters.length) this.schedule(() => this.showComplete(), 700);
+        if (!this.page) this.schedule(() => this.advance(), 300);
+        else if (this.charIndex >= this.clusters.length) this.schedule(() => this.showComplete(), 500);
         else {
           this.root.classList.add('is-visible');
-          this.schedule(() => this.typeNext(), 350);
+          this.schedule(() => this.typeNext(), 320);
         }
       }
     }
     finish() {
       this.ended = true;
+      this.clearActingTimers();
       this.root.classList.remove('is-visible');
       if (this.positionRaf) cancelAnimationFrame(this.positionRaf);
       this.positionRaf = 0;
       this.schedule(() => this.root.remove(), 1000);
+      const firstX = this.lavender?.baseSceneView?.centerX ?? this.initialCenterX;
+      const begin = nowMs();
+      const goHome = (t) => {
+        if (this.destroyed) return;
+        const k = reducedMotion ? 1 : clamp((t - begin) / 2100, 0, 1);
+        const eased = k * k * (3 - 2 * k);
+        if (this.lavender?.baseSceneView) this.lavender.baseSceneView.centerX = firstX + (this.initialCenterX - firstX) * eased;
+        this.lavender?.applyIdleDrift?.(0, .012);
+        if (k < 1) this.returnRaf = requestAnimationFrame(goHome);
+        else {
+          this.returnRaf = 0;
+          this.lavender?.engine?.setState?.('lament');
+          this.lavender?.startMelancholicIdle?.(this.residualTargets);
+        }
+      };
+      this.returnRaf = requestAnimationFrame(goHome);
     }
     destroy() {
       if (this.destroyed) return;
       this.destroyed = true;
       if (this.timer !== null) clearTimeout(this.timer);
       this.timer = null;
+      this.clearActingTimers();
       if (this.positionRaf) cancelAnimationFrame(this.positionRaf);
+      if (this.returnRaf) cancelAnimationFrame(this.returnRaf);
       this.positionRaf = 0;
+      this.returnRaf = 0;
       this.vocals.destroy();
       document.removeEventListener('visibilitychange', this.onVisibility);
       window.removeEventListener('resize', this.onResize);
@@ -460,7 +660,10 @@
         state: this.destroyed ? 'disposed' : this.ended ? 'completed' : this.started ? 'running' : 'preparing',
         index: this.index, total: PAGES.length, section: this.page?.section ?? null,
         typed: this.charIndex, totalCharacters: this.clusters.length,
-        audioMode: 'original-music-and-occasional-canonical-vocal-cues',
+        bubbleSide: this.root.dataset.side,
+        actingState: this.currentActing,
+        originalMusicLoop: this.music?.track?.loop ?? false,
+        vocalCuesPlayed: this.vocals.cuesPlayed,
         speechSynthesis: false,
       });
     }
@@ -474,12 +677,12 @@
 
   const onCosmicIdle = (event) => {
     if (director) return;
-    const { lavender, audio, music } = event.detail ?? {};
+    const { lavender, audio, music, getResidualTargets } = event.detail ?? {};
     if (!lavender?.engine) {
       console.warn('[Chispa][Lavender] No se encontró el renderizador canónico al llegar al reposo.');
       return;
     }
-    director = new LavenderDialogueDirector({ lavender, audio, music });
+    director = new LavenderDialogueDirector({ lavender, audio, music, getResidualTargets });
     director.start();
     console.info('[Chispa][Lavender] Narración automática iniciada.', PAGES.length, 'burbujas');
   };
