@@ -11,7 +11,16 @@ function createAudioElement(doc) {
  * the short SFX recordings are decoded fully by the audio director.
  */
 export class PageMusicDirector {
-  constructor({ url, audioContext, output, doc = globalThis.document, legacyElements = [], gain = 0.68 } = {}) {
+  constructor({ url, outroUrl = null, audioContext, output, doc = globalThis.document, legacyElements = [], gain = 0.68 } = {}) {
+    this.outroUrl = outroUrl;
+    this.outroTrack = null;
+    this.outroSource = null;
+    this.outroGainNode = null;
+    this.outroPrimed = false;
+    this.outroPrimingPromise = null;
+    this.outroStarted = false;
+    this.currentPrimaryGain = gain;
+    this.outroGainValue = 0.64;
     this.url = url;
     this.audioContext = audioContext;
     this.output = output;
@@ -67,6 +76,26 @@ export class PageMusicDirector {
     this.track = track;
     this.source = source;
     this.gainNode = gainNode;
+    if (this.outroUrl) {
+      // The two streams are prepared on the same music bus. Safari needs
+      // its first play on the user's Entrar gesture, even though it is silent.
+      const outro = createAudioElement(this.doc);
+      if (!outro) throw new Error('The narrative outro audio element is unavailable');
+      outro.preload = 'none';
+      outro.autoplay = false;
+      outro.loop = true;
+      outro.playsInline = true;
+      outro.crossOrigin = 'anonymous';
+      outro.src = this.outroUrl;
+      const outroSource = this.audioContext.createMediaElementSource(outro);
+      const outroGain = this.audioContext.createGain();
+      outroGain.gain.value = 0;
+      outroSource.connect(outroGain);
+      outroGain.connect(this.output);
+      this.outroTrack = outro;
+      this.outroSource = outroSource;
+      this.outroGainNode = outroGain;
+    }
 
     // Mobile browsers commonly ignore preload=auto until a user gesture. Let
     // the prepared scene reach its single Entrar action; that click primes the
@@ -142,6 +171,22 @@ export class PageMusicDirector {
     this.silenceLegacy();
     this.track.preload = 'auto';
     try { this.track.currentTime = 0; } catch {}
+    // Start the hidden outro while the same user gesture is still active.
+    // It stays silent on a Web Audio gain node until the final seven bubbles.
+    if (this.outroTrack) {
+      this.outroTrack.preload = 'auto';
+      try {
+        this.outroPrimingPromise = Promise.resolve(this.outroTrack.play?.()).then(() => {
+          this.outroPrimed = true;
+          return true;
+        }, (error) => {
+          console.warn('[Chispa] Outro preflight deferred by browser.', error);
+          return false;
+        });
+      } catch (error) {
+        console.warn('[Chispa] Outro preflight failed; will retry at the end.', error);
+      }
+    }
     this.playPromise = Promise.resolve(this.track.play?.()).then(() => {
       this.primed = true;
       return true;
@@ -174,6 +219,66 @@ export class PageMusicDirector {
     return true;
   }
 
+  fadePrimaryForRemaining(remaining) {
+    if (!this.outroUrl || this.destroyed || !this.gainNode || remaining > 11 || remaining < 7) return false;
+    // Start decreasing exactly eleven bubbles before the end. A progressive
+    // four-message fade leads naturally into Yo Quisiera at seven remaining.
+    const progress = Math.max(0, Math.min(1, (remaining - 7) / 5));
+    const target = this.gainValue * progress;
+    const now = this.audioContext.currentTime;
+    const param = this.gainNode.gain;
+    try {
+      param.cancelScheduledValues(now);
+      param.setValueAtTime(this.currentPrimaryGain, now);
+      param.linearRampToValueAtTime(target, now + 4.2);
+      this.currentPrimaryGain = target;
+      return true;
+    } catch (error) {
+      console.warn('[Chispa] Intro ambience fade skipped.', error);
+      return false;
+    }
+  }
+
+  startNarrativeOutro() {
+    if (this.destroyed || this.outroStarted || !this.outroTrack || !this.outroGainNode) return false;
+    const now = this.audioContext.currentTime;
+    const track = this.outroTrack;
+    const fadeIn = 6.2;
+    // The stream was unlocked from Entrar, but reset it so Yo Quisiera
+    // starts at its actual beginning, not at a position in a silent loop.
+    try { track.currentTime = 0; } catch {}
+    track.loop = false;
+    if (track.paused) {
+      try {
+        this.outroPrimingPromise = Promise.resolve(track.play?.()).then(() => true, (error) => {
+          console.warn('[Chispa] Safari blocked the outro stream.', error);
+          return false;
+        });
+      } catch (error) {
+        console.warn('[Chispa] Outro could not resume.', error);
+        return false;
+      }
+    }
+    try {
+      const outroGain = this.outroGainNode.gain;
+      outroGain.cancelScheduledValues(now);
+      outroGain.setValueAtTime(0, now);
+      outroGain.linearRampToValueAtTime(this.outroGainValue, now + fadeIn);
+      if (this.gainNode) {
+        const ambientGain = this.gainNode.gain;
+        ambientGain.cancelScheduledValues(now);
+        ambientGain.setValueAtTime(this.currentPrimaryGain, now);
+        ambientGain.linearRampToValueAtTime(0, now + 4.0);
+      }
+      this.currentPrimaryGain = 0;
+      this.outroStarted = true;
+      return true;
+    } catch (error) {
+      console.warn('[Chispa] Outro crossfade could not be scheduled.', error);
+      return false;
+    }
+  }
+
   keepPlayingThroughIdle() {
     return this.primed && !this.destroyed;
   }
@@ -182,6 +287,10 @@ export class PageMusicDirector {
     if (this.destroyed) return;
     this.destroyed = true;
     try { this.gainNode?.gain?.cancelScheduledValues?.(this.audioContext?.currentTime ?? 0); } catch {}
+    try { this.outroGainNode?.gain?.cancelScheduledValues?.(this.audioContext?.currentTime ?? 0); } catch {}
+    try { this.outroTrack?.pause?.(); } catch {}
+    try { this.outroTrack?.removeAttribute?.('src'); this.outroTrack?.load?.(); } catch {}
+    try { this.outroSource?.disconnect?.(); this.outroGainNode?.disconnect?.(); } catch {}
     try { this.gainNode?.disconnect?.(); } catch {}
     try { this.source?.disconnect?.(); } catch {}
     try { this.track?.pause?.(); } catch {}
@@ -192,6 +301,10 @@ export class PageMusicDirector {
     this.track = null;
     this.source = null;
     this.gainNode = null;
+    this.outroSource = null;
+    this.outroGainNode = null;
+    this.outroTrack = null;
+    this.outroPrimingPromise = null;
     this.playPromise = null;
     this.preloaded = false;
     this.primed = false;
