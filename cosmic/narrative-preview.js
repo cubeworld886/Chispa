@@ -232,15 +232,18 @@
         gain.gain.linearRampToValueAtTime(0, at + duration);
         source.connect(gain);
         gain.connect(this.destination);
-        const musicGain = this.music?.gainNode?.gain;
-        if (musicGain && this.music?.primed && !this.music.destroyed) {
-          const base = this.music.gainValue ?? .68;
-          // Mild side-chain duck for the brief non-verbal reaction, not a pause.
-          musicGain.cancelScheduledValues(at);
-          musicGain.setValueAtTime(base, at);
-          musicGain.linearRampToValueAtTime(base * .84, at + .10);
-          musicGain.setValueAtTime(base * .84, at + Math.max(.11, duration - .10));
-          musicGain.linearRampToValueAtTime(base, at + duration + .30);
+        // Never cancel the long prairie fade for a vocalization. During
+        // the outro, duck the active Yo Quisiera stream instead.
+        const fading = this.music?.primaryFadeActive && !this.music?.outroStarted;
+        const activeGain = this.music?.outroStarted
+          ? this.music?.outroGainNode?.gain : this.music?.gainNode?.gain;
+        if (activeGain && this.music?.primed && !this.music.destroyed && !fading) {
+          const base = this.music.outroStarted ? this.music.outroGainValue : (this.music.currentPrimaryGain ?? this.music.gainValue ?? .68);
+          activeGain.cancelScheduledValues(at);
+          activeGain.setValueAtTime(base, at);
+          activeGain.linearRampToValueAtTime(base * .84, at + .10);
+          activeGain.setValueAtTime(base * .84, at + Math.max(.11, duration - .10));
+          activeGain.linearRampToValueAtTime(base, at + duration + .30);
         }
         this.lastAt = at;
         this.cuesPlayed += 1;
@@ -473,7 +476,16 @@
       const remaining = PAGES.length - this.index;
       // Eleven messages before the end: lower the prairie sound one passage
       // at a time. Seven before the end: start Yo Quisiera with a slow fade.
-      if (remaining >= 7 && remaining <= 11) this.music?.fadePrimaryForRemaining?.(remaining);
+      if (remaining === 11) {
+        const approachingOutro = PAGES.slice(this.index, this.index + 4);
+        const seconds = approachingOutro.reduce((total, page) => {
+          const words = page.text.trim().split(/\s+/u).length;
+          const typingSeconds = (page.text.length * .037) + ((page.text.match(/[.!?,;:…]/g) ?? []).length * .105);
+          const holdSeconds = clamp(1.75 + words * .22, 3.35, 10.2);
+          return total + typingSeconds + holdSeconds + page.pause / 1000 + .58;
+        }, 0);
+        this.music?.fadePrimaryForRemaining?.(remaining, Math.max(18, seconds));
+      }
       if (remaining === 7) this.music?.startNarrativeOutro?.();
       this.charIndex = 0;
       this.root.classList.remove('is-visible', 'is-written');
