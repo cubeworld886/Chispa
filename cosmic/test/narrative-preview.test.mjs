@@ -3,152 +3,258 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
-const code = readFileSync(new URL('../narrative-preview.js', import.meta.url), 'utf8');
+const script = readFileSync(new URL('../narrative-preview.js', import.meta.url), 'utf8');
+const style = readFileSync(new URL('../narrative-preview.css', import.meta.url), 'utf8');
 
-function mockNode(tag) {
-  const descendants = new Map();
+function node(tag = 'div') {
+  const children = [];
+  const selectors = new Map();
   const classes = new Set();
-  return {
-    tag, id: '', hidden: false, offsetHeight: 128,
-    textContent: '', innerHTML: '', dataset: {},
-    style: { setProperty() {} },
+  const self = {
+    tag, children, selectors, tagName: tag,
+    id: '', className: '', dataset: {}, hidden: false, textContent: '',
+    style: { width: '230px', setProperty(key, value) { this[key] = value; } },
     classList: {
-      add(...values) { for (const value of values) classes.add(value); },
-      remove(...values) { for (const value of values) classes.delete(value); },
+      add(...values) { values.forEach((value) => classes.add(value)); },
+      remove(...values) { values.forEach((value) => classes.delete(value)); },
       contains(value) { return classes.has(value); },
     },
     setAttribute() {}, addEventListener() {}, removeEventListener() {},
-    append(node) { (this.appended ??= []).push(node); },
-    remove() { this.removed = true; },
+    appendChild(child) { children.push(child); return child; },
+    append(child) { return self.appendChild(child); },
+    replaceChildren(...next) { children.splice(0, children.length, ...next); },
+    remove() { self.removed = true; },
     querySelector(selector) {
-      if (!descendants.has(selector)) descendants.set(selector, mockNode(selector));
-      return descendants.get(selector);
+      if (!selectors.has(selector)) selectors.set(selector, node(selector));
+      return selectors.get(selector);
     },
   };
-}
-
-function makeEnvironment(search = '') {
-  const scheduled = new Map();
-  const listeners = new Map();
-  let nextId = 0;
-  const setTimeout = (fn, ms) => {
-    const id = ++nextId;
-    scheduled.set(id, { fn, ms });
-    return id;
-  };
-  const clearTimeout = (id) => scheduled.delete(id);
-  const document = {
-    baseURI: 'https://example.test/index.html',
-    head: mockNode('head'),
-    body: mockNode('body'),
-    hidden: false,
-    createElement: mockNode,
-    addEventListener(kind, handler) { listeners.set('document:' + kind, handler); },
-    removeEventListener(kind) { listeners.delete('document:' + kind); },
-  };
-  const window = {
-    innerWidth: 390,
-    innerHeight: 844,
-    setTimeout,
-    matchMedia: () => ({ matches: false }),
-    addEventListener(kind, handler) { listeners.set('window:' + kind, handler); },
-    removeEventListener(kind) { listeners.delete('window:' + kind); },
-  };
-  const sandbox = {
-    window, document,
-    location: { search },
-    URL, URLSearchParams, Intl,
-    console: { info() {}, warn() {} },
-    requestAnimationFrame: () => 1,
-    cancelAnimationFrame() {},
-    clearTimeout,
-  };
-  const nextTimer = () => {
-    if (!scheduled.size) return false;
-    const [id, callback] = scheduled.entries().next().value;
-    scheduled.delete(id);
-    callback.fn();
-    return true;
-  };
-  return { sandbox, document, window, listeners, scheduled, nextTimer };
-}
-
-test('normal Chispa visits have no narrative overlays and no sound preload', () => {
-  const env = makeEnvironment('');
-  runInNewContext(code, env.sandbox);
-  assert.equal(env.document.body.appended, undefined);
-  assert.equal(env.document.head.appended, undefined);
-  assert.equal(env.window.__chispaNarrativePreview, undefined);
-});
-
-test('narrative only starts automatically after canonical Lavender reaches idle', () => {
-  const env = makeEnvironment('?previewNarrative=1');
-  runInNewContext(code, env.sandbox);
-  assert.equal(env.window.__chispaNarrativePreview.getStatus().state, 'waiting-for-cosmic-idle');
-  assert.equal(env.window.__chispaNarrativePreview.getStatus().total, 62);
-  assert.equal(env.document.body.appended, undefined);
-
-  const music = { track: { loop: false } };
-  const lavender = {
-    engine: {
-      getActorScreenRect() {
-        return { left: 160, top: 380, right: 230, bottom: 450, width: 70, height: 70 };
-      },
-    },
-    lookDown() {},
-    lookAtWorldPoint() {},
-  };
-  const onIdle = env.listeners.get('window:chispa:cosmic-idle');
-  assert.equal(typeof onIdle, 'function');
-  onIdle({ detail: { lavender, audio: { context: null }, music } });
-  assert.equal(music.track.loop, true);
-  assert.equal(env.window.__chispaNarrativePreview.getStatus().state, 'running');
-  assert.equal(env.document.body.appended.length, 1);
-
-  for (let step = 0; step < 10; step += 1) {
-    assert.equal(env.nextTimer(), true);
-  }
-  const status = env.window.__chispaNarrativePreview.getStatus();
-  assert.equal(status.section, 'heavy');
-  assert.equal(status.index, 0);
-  assert.ok(status.typed > 0);
-  assert.equal(status.speechSynthesis, false);
-});
-
-test('all 62 bubbles complete without manual interaction', () => {
-  const env = makeEnvironment('?previewNarrative=1');
-  runInNewContext(code, env.sandbox);
-  const music = { track: { loop: false } };
-  env.listeners.get('window:chispa:cosmic-idle')({
-    detail: {
-      lavender: {
-        engine: {
-          getActorScreenRect: () => ({
-            left: 160, top: 380, right: 230, bottom: 450,
-            width: 70, height: 70,
-          }),
-        },
-        lookDown() {},
-        lookAtWorldPoint() {},
-      },
-      music,
-      audio: { context: null },
+  Object.defineProperty(self, 'offsetHeight', {
+    get() {
+      if (self.id !== 'chispa-lavender-dialogue') return 70;
+      const written = self.querySelector('.lnv-written');
+      let count = 0;
+      for (const fragment of written.children) {
+        for (const word of fragment.children) {
+          count += word.children?.length || word.textContent?.length || 0;
+        }
+      }
+      const width = parseInt(self.style.width, 10) || 230;
+      return 35 + Math.max(1, Math.ceil(count / Math.max(12, (width - 32) / 7))) * 21;
     },
   });
-  let timerSteps = 0;
-  while (env.nextTimer() && timerSteps < 22_000) timerSteps += 1;
-  assert.ok(timerSteps < 22_000, 'the automatic narration should terminate');
-  assert.equal(env.window.__chispaNarrativePreview.getStatus().state, 'completed');
-  assert.equal(env.window.__chispaNarrativePreview.getStatus().index, 62);
-  assert.equal(env.scheduled.size, 0);
-  assert.equal(music.track.loop, true);
+  return self;
+}
+
+function createScene(query = '?previewNarrative=1', { width = 390, audioEnabled = false } = {}) {
+  const timers = new Map();
+  const frameCallbacks = new Map();
+  const listeners = new Map();
+  const soundsPlayed = [];
+  let seq = 0;
+  let clock = 0;
+
+  const setTimeout = (fn, delay = 0) => {
+    const key = ++seq;
+    timers.set(key, { due: clock + delay, fn });
+    return key;
+  };
+  const clearTimeout = (id) => timers.delete(id);
+  const requestAnimationFrame = (callback) => {
+    const key = ++seq;
+    frameCallbacks.set(key, callback);
+    return key;
+  };
+  const cancelAnimationFrame = (id) => frameCallbacks.delete(id);
+
+  const body = node('body');
+  const head = node('head');
+  const document = {
+    baseURI: 'https://example.test/index.html',
+    head, body, hidden: false,
+    createElement: node,
+    createDocumentFragment: () => node('fragment'),
+    createTextNode(value) { const text = node('#text'); text.textContent = value; return text; },
+    addEventListener(name, fn) { listeners.set('doc:' + name, fn); },
+    removeEventListener(name) { listeners.delete('doc:' + name); },
+  };
+  const context = {
+    state: 'running',
+    get currentTime() { return clock / 1000; },
+    createBufferSource() {
+      return {
+        buffer: null, connect() {}, disconnect() {}, stop() {},
+        start() { soundsPlayed.push(this.buffer?.key); },
+      };
+    },
+    createGain() {
+      return {
+        gain: {
+          setValueAtTime() {}, linearRampToValueAtTime() {},
+          cancelScheduledValues() {},
+        },
+        connect() {}, disconnect() {},
+      };
+    },
+    async decodeAudioData(buffer) {
+      return { duration: 1.1, key: buffer.key };
+    },
+  };
+  const audio = audioEnabled ? {
+    context,
+    getMixOutput: () => context.createGain(),
+  } : { context: null };
+  const music = {
+    destroyed: false, primed: true,
+    gainValue: 0.68,
+    gainNode: { gain: {
+      cancelScheduledValues() {}, setValueAtTime() {},
+      linearRampToValueAtTime() {},
+    } },
+    track: { loop: false },
+  };
+  const lavender = {
+    baseSceneView: { centerX: 0.5 },
+    idle: { stopped: false, stop() { this.stopped = true; } },
+    engine: {
+      state: 'lament',
+      setState(value) { this.state = value; },
+      setSceneMotion() {}, setHeadTurn() {}, resumeAnimation() {},
+      getActorScreenRect() {
+        const center = lavender.baseSceneView.centerX * width;
+        return {
+          left: center - 35, right: center + 35,
+          top: 386, bottom: 456, width: 70, height: 70,
+        };
+      },
+    },
+    applyIdleDrift() {}, lookDown() {}, lookAtWorldPoint() {},
+    startMelancholicIdle() {},
+  };
+  const window = {
+    innerWidth: width, innerHeight: 844, setTimeout,
+    matchMedia: () => ({ matches: false }),
+    addEventListener(name, fn) { listeners.set('win:' + name, fn); },
+    removeEventListener(name) { listeners.delete('win:' + name); },
+  };
+  const fakeConsole = { info() {}, warn() {} };
+  const fakeUrl = class {
+    constructor(path, base = 'https://example.test/') {
+      this.href = String(base).replace(/[^/]*$/, '') + path;
+    }
+  };
+  const fakeParams = class {
+    constructor(input) { this.input = input || ''; }
+    get(key) { return this.input.includes(key + '=1') ? '1' : null; }
+  };
+  const sandbox = {
+    window, document, console: fakeConsole, Intl,
+    URL: fakeUrl, URLSearchParams: fakeParams,
+    location: { search: query }, clearTimeout,
+    requestAnimationFrame, cancelAnimationFrame,
+    fetch: async (url) => ({
+      ok: true,
+      arrayBuffer: async () => ({
+        key: /(lavender_\w+|lavender-sad)/.exec(url)?.[1] || 'unknown',
+      }),
+    }),
+  };
+  runInNewContext(script, sandbox);
+  const frame = (timestamp) => {
+    clock = timestamp;
+    const current = [...frameCallbacks];
+    frameCallbacks.clear();
+    for (const [, callback] of current) callback(clock);
+  };
+  const next = () => {
+    if (!timers.size) return false;
+    const [id, task] = [...timers].sort((a, b) => a[1].due - b[1].due)[0];
+    timers.delete(id);
+    frame(task.due);
+    task.fn();
+    return true;
+  };
+  const enterIdle = () => {
+    const listener = listeners.get('win:chispa:cosmic-idle');
+    assert.equal(typeof listener, 'function');
+    listener({
+      detail: { lavender, audio, music, getResidualTargets: () => [] },
+    });
+  };
+  return {
+    window, document, lavender, audio, music, soundsPlayed,
+    timers, listeners, frame, next, enterIdle,
+  };
+}
+
+test('ordinary Chispa visits are unaffected by the opt-in dialogue', () => {
+  const scene = createScene('');
+  assert.equal(scene.document.body.children.length, 0);
+  assert.equal(scene.document.head.children.length, 0);
+  assert.equal(scene.window.__chispaNarrativePreview, undefined);
 });
 
-test('dialogue is written only: no TTS, independent UI or playback controls', () => {
-  assert.doesNotMatch(code, /new\s+SpeechSynthesisUtterance|speechSynthesis\.speak|<button[^>]+data-action/);
-  assert.match(code, /come on and haunt me/i);
-  assert.match(code, /volviéramos a encontrarnos/);
-  assert.doesNotMatch(code, /hay algo profundamente triste en pensar eso/i);
-  assert.doesNotMatch(code, /hay otra canción que también me recuerda a ti/i);
-  assert.match(code, /assets\/lavender\/sfx\/lavender_talking\.wav/);
+test('the narrative waits for the original constellation finale and starts without interaction', () => {
+  const scene = createScene();
+  assert.equal(scene.window.__chispaNarrativePreview.getStatus().state, 'waiting-for-cosmic-idle');
+  assert.equal(scene.window.__chispaNarrativePreview.getStatus().total, 62);
+  assert.equal(scene.document.body.children.length, 0);
+  scene.enterIdle();
+  assert.equal(scene.document.body.children.length, 1);
+  assert.equal(scene.lavender.idle.stopped, true);
+  assert.equal(scene.music.track.loop, true);
+});
+
+test('the full text occupies stable positions while letters are revealed', () => {
+  const scene = createScene();
+  scene.enterIdle();
+  for (const time of [10, 400, 850, 1200, 1600, 2200]) scene.frame(time);
+  assert.equal(scene.next(), true);
+  assert.equal(scene.next(), true);
+  const bubble = scene.document.body.children[0];
+  const preTypingHeight = bubble.offsetHeight;
+  const preTypingNodes = bubble.querySelector('.lnv-written').children.length;
+  for (let i = 0; i < 14; i += 1) scene.next();
+  assert.equal(bubble.offsetHeight, preTypingHeight);
+  assert.equal(bubble.querySelector('.lnv-written').children.length, preTypingNodes);
+  assert.ok(scene.window.__chispaNarrativePreview.getStatus().typed > 0);
+  assert.match(style, /lnv-letter\.is-revealed/);
+  assert.match(style, /position:\s*relative/);
+});
+
+test('on small screens Lavender moves right and speech stays on her left', () => {
+  const scene = createScene();
+  scene.enterIdle();
+  for (const time of [10, 400, 850, 1200, 1600, 2200]) scene.frame(time);
+  scene.next();
+  scene.next();
+  const status = scene.window.__chispaNarrativePreview.getStatus();
+  assert.equal(status.bubbleSide, 'left');
+  assert.ok(scene.lavender.baseSceneView.centerX > 0.78);
+});
+
+test('all bubbles finish; original music plays and canonical sounds vary', async () => {
+  const scene = createScene('?previewNarrative=1', { audioEnabled: true });
+  scene.enterIdle();
+  for (let i = 0; i < 14; i += 1) await Promise.resolve();
+  for (const time of [10, 400, 850, 1200, 1600, 2200]) scene.frame(time);
+  let count = 0;
+  while (scene.next() && count < 24_000) count += 1;
+  const status = scene.window.__chispaNarrativePreview.getStatus();
+  assert.ok(count < 24_000);
+  assert.equal(status.state, 'completed');
+  assert.equal(status.index, 62);
+  assert.equal(status.speechSynthesis, false);
+  assert.equal(status.originalMusicLoop, true);
+  assert.ok(status.vocalCuesPlayed >= 5, 'more than the opening hello should play');
+  assert.ok(new Set(scene.soundsPlayed).size >= 4, 'different approved sound files should play');
+});
+
+test('dialogue retains the agreed wording with no synthetic voice', () => {
+  assert.doesNotMatch(script, /new\s+SpeechSynthesisUtterance|speechSynthesis\.speak/);
+  assert.match(script, /come on and haunt me/i);
+  assert.match(script, /volviéramos a encontrarnos/);
+  assert.doesNotMatch(script, /hay algo profundamente triste en pensar eso/i);
+  assert.doesNotMatch(script, /hay otra canción que también me recuerda a ti/i);
+  assert.match(script, /setState\?\.\(state\)/);
 });
