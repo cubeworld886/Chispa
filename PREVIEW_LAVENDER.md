@@ -1,53 +1,80 @@
-# Chispa — vista previa de Lavender (rama de ensayo)
+# Chispa — rama de prueba con diálogo automático de Lavender
 
-Esta rama **no es producción**. Es una prueba interactiva de la narración
-en primera persona que utiliza el **motor canónico** de Lavender existente en
-`lavender-runtime/dist/`.
+> **Estado:** Desarrollo y validación. No fusionar con `main` hasta revisar
+> la experiencia visual, la carga de medios y el rendimiento en iPhone.
 
-## Acceso
+Esta implementación **mantiene la página original de Chispa**, incluida
+la carga inicial, la fractura de la constelación, el destello, la explosión,
+la aparición de Lavender, su respiración y el estado melancólico.
 
-- **Laboratorio ligero para iPhone:** `narrative-lab.html?previewNarrative=1`.
-  Monta el motor `LavenderSvgEngine` con `ChispaLavenderHost` y abre la
-  narración sin exigir que se reproduzca antes la escena cósmica.
-- **Chispa original con secuencia completa:** `index.html?previewNarrative=1`.
-  La narración solo comienza después del estado cósmico `idle`, con el
-  renderizador original y las animaciones que ya están en el repositorio.
-- **Sin el parámetro:** las visitas a `index.html` no activan la
-  narración de prueba.
+La novedad es una secuencia de **burbujas animadas automáticas** una vez
+que Lavender termina su aparición y entra en el estado `idle` de la
+secuencia cinematográfica (alrededor de 15,2 segundos desde el inicio
+del evento).
 
-Para abrir estas páginas desde un dispositivo sin un servidor propio,
-se puede usar el proxy de desarrollo externo `raw.githack.com`,
-que sirve archivos públicos de GitHub con el tipo MIME adecuado.
-No es una URL privada ni tiene garantía de disponibilidad.
+## Cómo abrir la prueba
 
-## Controles de la prueba
+`index.html?previewNarrative=1`
 
-- Escuchar con la voz de síntesis del navegador (no es voz final).
-- Leer en silencio.
-- Avanzar y retroceder entre seis fragmentos.
-- Pausar, reanudar, cerrar y reabrir la narración.
+La URL `narrative-lab.html?previewNarrative=1` ahora **redirige** a
+`index.html?previewNarrative=1`, para evitar un segundo diseño que
+no representa la experiencia final.
 
-## Límites deliberados
+No es necesario presionar ningún botón ni abrir paneles para que
+Lavender muestre sus mensajes: solo se conserva el botón **ENTRAR**
+original, necesario para comenzar la escena y habilitar el audio en
+los navegadores móviles.
 
-- Los textos son un ensayo reducido; **el monólogo personal completo
-  NO está publicado** en esta rama.
-- No hay integración de ElevenLabs ni de pistas de voz final.
-- Los movimientos usan `setState('lament')`, `lookDown`,
-  `lookAtWorldPoint`, respiración y expresiones del motor existente,
-  sin geometría ni ilustraciones sustitutivas.
-- Todavía es necesario validar la reproducción real en Safari iOS y
-  comprobar audio, rendimiento, carga y accesibilidad.
-- Se requiere revisión y autorización explícita antes de fusionar en `main`.
+Sin el parámetro `previewNarrative=1`, el flujo original no añade
+el diálogo.
 
-## Archivos modificados
+## Comportamiento canónico
 
-- `narrative-lab.html`: laboratorio independiente con Lavender canónica.
-- `cosmic/narrative-preview.js`: capítulos, estados y controles.
-- `cosmic/narrative-preview.css`: interfaz adaptativa.
-- `cosmic/cosmic-event.js`: aviso opcional al entrar en estado `idle`.
-- `index.html`: carga condicional de la experiencia de prueba
-  controlada por el parámetro `previewNarrative=1`.
+- **Personaje**: el mismo `LavenderSvgEngine` SVG de
+  `lavender-runtime/dist/`, montado mediante `ChispaLavenderHost`.
+  La geometría y las animaciones corporales no se reimplementan ni alteran.
+- **Burbujas**: adaptación web de las reglas de
+  `lib/core/mascot/companion/lavender_speech.dart` del proyecto Lyra POS:
+  paleta lila, fondo oscuro, cola orientada hacia Lavender, entrada suave,
+  escritura gradual y pausas según la puntuación.
+  Es una adaptación de interfaz al DOM, **no** el widget Flutter original.
+- **Movimiento**: el motor sigue reproduciendo `lament` y el movimiento
+  melancólico. El diálogo solo orienta discretamente la mirada entre
+  secciones.
+- **Sonidos**: `lavender_hello.wav`, `lavender_talking.wav` y
+  `lavender_thinking.wav`, copiados sin cambiar sus bytes del repositorio
+  original Lyra POS. Suenan solo de forma ocasional (en la prueba,
+  con al menos 24 s entre vocalizaciones) a volumen bajo.
+- **Audio musical**: la pista original
+  `assets/music/dandara-legacy.mp3` sigue reproduciéndose por
+  `PageMusicDirector`. Solo en la rama y al iniciar el monólogo
+  se habilita la repetición de esa pista.
+- **Sin voz sintética, TTS ni locución**: Lavender únicamente escribe
+  mediante burbujas, con sus vocalizaciones no verbales.
+- **Narrativa**: texto completo en primera persona, con referencias
+  a *Heavy* y *Apocalypse*; la letra de esta última se reduce
+  a una cita muy breve y el resto es interpretación personal.
 
-Para probar localmente, servir la raíz del repositorio mediante un
-servidor estático, por ejemplo `python3 -m http.server 8080`, y abrir
-`http://localhost:8080/narrative-lab.html?previewNarrative=1`.
+## Archivos
+
+- `cosmic/narrative-preview.js`: narración, burbujas, escritura,
+  anclaje responsive y sonidos discretos.
+- `cosmic/narrative-preview.css`: presentación de burbujas.
+- `cosmic/cosmic-event.js`: puente opt-in tras la secuencia original.
+- `index.html`: carga del módulo de ensayo tras `script.js`.
+- `assets/lavender/sfx/`: tres vocalizaciones originales de Lyra POS.
+- `narrative-lab.html`: enlace heredado, ahora redirige a la
+  experiencia original.
+
+## Pendiente para aprobación de producción
+
+1. Ejecutar la experiencia completa en Safari iOS con medios cargados.
+2. Verificar disposición de burbujas sobre Lavender en orientaciones
+   vertical/horizontal, y con zoom y texto grande.
+3. Confirmar que `ENTRAR` habilita la música de fondo y Web Audio.
+4. Ajustar tiempos, pausas, miradas y frecuencias de vocalización
+   después de observar la ejecución real.
+5. Revisar la redacción definitiva con el autor antes de fusionar.
+
+La rama sigue siendo pública porque el repositorio Chispa es público.
+No existe publicación automática en producción por editar esta rama.
