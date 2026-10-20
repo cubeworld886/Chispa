@@ -280,7 +280,8 @@
       this.charIndex = 0;
       this.page = null;
       this.clusters = [];
-      this.letters = [];
+      this.words = [];
+      this.wordIndex = 0;
       this.timer = null;
       this.actingTimers = new Set();
       this.positionRaf = 0;
@@ -306,7 +307,7 @@
       this.originalLavenderMaxFps = this.lavender?.engine?.performance?.maxFps ?? null;
       const performance = this.lavender?.engine?.performance;
       if (performance && Number.isFinite(performance.maxFps)) {
-        performance.maxFps = Math.min(performance.maxFps, coarse ? 18 : 30);
+        performance.maxFps = Math.min(performance.maxFps, 30);
       }
 
       this.root = document.createElement('div');
@@ -395,36 +396,40 @@
       return Array.from(input);
     }
     createStableLetters(text) {
-      // All words and graphemes exist IN NORMAL FLOW before typing starts.
-      // Revealing their opacity cannot cause wrap changes or vertical jumping.
+      // Keep all text in normal flow from the first frame, so line breaks,
+      // bubble dimensions and anchor stay stable. Each word needs only TWO
+      // nodes rather than one element + transition for every letter.
+      // A stepped clip reveals the word's letters without any text relayout.
       const fragment = document.createDocumentFragment();
-      const characters = [];
-      const letterNodes = [];
+      const words = [];
+      let spacesBefore = 0;
       for (const token of text.match(/\s+|\S+/gu) ?? []) {
         if (/^\s+$/u.test(token)) {
-          const node = document.createTextNode(token);
-          fragment.appendChild(node);
-          for (const ch of this.segmentText(token)) {
-            characters.push(ch);
-            letterNodes.push(null);
-          }
-        } else {
-          const word = document.createElement('span');
-          word.className = 'lnv-word';
-          for (const ch of this.segmentText(token)) {
-            const letter = document.createElement('span');
-            letter.className = 'lnv-letter';
-            letter.textContent = ch;
-            word.appendChild(letter);
-            characters.push(ch);
-            letterNodes.push(letter);
-          }
-          fragment.appendChild(word);
+          fragment.appendChild(document.createTextNode(token));
+          spacesBefore += this.segmentText(token).length;
+          continue;
         }
+        const wrapper = document.createElement('span');
+        wrapper.className = 'lnv-word';
+        const ink = document.createElement('span');
+        ink.className = 'lnv-word-ink';
+        ink.textContent = token;
+        wrapper.appendChild(ink);
+        fragment.appendChild(wrapper);
+        const chars = this.segmentText(token).length;
+        const punctuation = token.match(/[,;:.!?…]/gu) ?? [];
+        const pause = punctuation.reduce((delay, mark) => {
+          if (mark === '…') return delay + 170;
+          if ('.!?'.includes(mark)) return delay + 145;
+          return delay + 75;
+        }, 18);
+        words.push({ node: ink, chars, advance: spacesBefore + chars, pause });
+        spacesBefore = 0;
       }
       this.written.replaceChildren(fragment);
-      this.clusters = characters;
-      this.letters = letterNodes;
+      this.clusters = this.segmentText(text);
+      this.words = words;
+      this.wordIndex = 0;
     }
     performanceFor(page) {
       return ACTING[page.section]?.[page.lineIndex] ?? 'lament';
@@ -518,24 +523,23 @@
     typeNext() {
       if (this.destroyed || !this.page) return;
       if (reducedMotion) {
-        for (const node of this.letters) if (node) node.classList.add('is-revealed');
+        for (const word of this.words) word.node.classList.add('is-revealed');
+        this.wordIndex = this.words.length;
         this.charIndex = this.clusters.length;
         return this.showComplete();
       }
-      if (this.charIndex >= this.clusters.length) return this.showComplete();
-      const ch = this.clusters[this.charIndex];
-      const letter = this.letters[this.charIndex];
-      if (letter) letter.classList.add('is-revealed');
-      this.charIndex += 1;
-      let delay = 28 + ((this.charIndex * 17 + this.index * 7) % 12);
-      if (ch === ' ') delay = 18;
-      if (',;:'.includes(ch)) delay += 75;
-      if ('.!?'.includes(ch)) delay += 145;
-      if (ch === '…') delay += 170;
-      this.schedule(() => this.typeNext(), delay);
+      if (this.wordIndex >= this.words.length) return this.showComplete();
+      const word = this.words[this.wordIndex++];
+      const duration = Math.max(38, word.chars * 34);
+      word.node.style.transitionDuration = duration + 'ms';
+      word.node.style.transitionTimingFunction = 'steps(' + Math.max(1, word.chars) + ', end)';
+      word.node.classList.add('is-revealed');
+      this.charIndex = Math.min(this.clusters.length, this.charIndex + word.advance);
+      this.schedule(() => this.typeNext(), duration + word.pause);
     }
     showComplete() {
-      for (const node of this.letters) if (node) node.classList.add('is-revealed');
+      for (const word of this.words) word.node.classList.add('is-revealed');
+      this.charIndex = this.clusters.length;
       this.spark.hidden = true;
       this.root.classList.add('is-written');
       const words = this.page.text.trim().split(/\s+/u).length;
@@ -559,11 +563,15 @@
     positionTick(now) {
       if (this.destroyed || this.ended) return;
       this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
-      if (now - this.lastRenderAt >= (this.narrativeMobile ? 100 : 65) && !document.hidden) {
+      const stageMoving = !this.stageStartedAt || now - this.stageStartedAt < 2050;
+      const interval = this.narrativeMobile ? (stageMoving ? 34 : 100) : 65;
+      if (now - this.lastRenderAt >= interval && !document.hidden) {
         this.lastRenderAt = now;
         this.updateStage(now);
       }
-      if (now - this.lastPositionAt < (this.narrativeMobile ? 200 : 110) || !this.page || document.hidden) return;
+      // Bubble layout is fixed for each message. Only follow Lavender while
+      // she initially moves into position; no recurring layout while typing.
+      if (!stageMoving || now - this.lastPositionAt < 125 || !this.page || document.hidden) return;
       this.lastPositionAt = now;
       this.place();
     }
