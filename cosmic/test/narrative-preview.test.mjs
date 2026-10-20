@@ -205,7 +205,7 @@ test('the narrative waits for the original constellation finale and starts witho
   assert.equal(scene.music.track.loop, true);
 });
 
-test('the full text occupies stable positions while letters are revealed', () => {
+test('the full text stays fixed with lightweight word-level reveal, without expensive blur', () => {
   const scene = createScene();
   scene.enterIdle();
   for (const time of [10, 400, 850, 1200, 1600, 2200]) scene.frame(time);
@@ -218,8 +218,14 @@ test('the full text occupies stable positions while letters are revealed', () =>
   assert.equal(bubble.offsetHeight, preTypingHeight);
   assert.equal(bubble.querySelector('.lnv-written').children.length, preTypingNodes);
   assert.ok(scene.window.__chispaNarrativePreview.getStatus().typed > 0);
-  assert.match(style, /lnv-letter\.is-revealed/);
+  assert.match(style, /lnv-word-ink\.is-revealed/);
   assert.match(style, /position:\s*relative/);
+  assert.doesNotMatch(style, /(?:-webkit-)?backdrop-filter\s*:/);
+  // A whole paragraph should use word nodes, not one DOM element per glyph.
+  const precomposed = bubble.querySelector('.lnv-written').children[0];
+  const wordCount = precomposed.children.filter((child) => child.tag === 'span').length;
+  const characterCount = scene.window.__chispaNarrativePreview.getStatus().totalCharacters;
+  assert.ok(wordCount * 2 < characterCount);
 });
 
 test('on small screens Lavender moves right and speech stays on her left', () => {
