@@ -1,80 +1,86 @@
-# Chispa — rama de prueba con diálogo automático de Lavender
+# Chispa — vista previa narrativa de Lavender
 
-> **Estado:** Desarrollo y validación. No fusionar con `main` hasta revisar
-> la experiencia visual, la carga de medios y el rendimiento en iPhone.
+> Implementación **solo en la rama** `lavender-narrative-preview`.
+> `main` y la página publicada se mantienen sin cambios.
 
-Esta implementación **mantiene la página original de Chispa**, incluida
-la carga inicial, la fractura de la constelación, el destello, la explosión,
-la aparición de Lavender, su respiración y el estado melancólico.
+## Flujo de la experiencia
 
-La novedad es una secuencia de **burbujas animadas automáticas** una vez
-que Lavender termina su aparición y entra en el estado `idle` de la
-secuencia cinematográfica (alrededor de 15,2 segundos desde el inicio
-del evento).
+La página conserva la secuencia completa de Chispa: pantalla de
+entrada, constelación de Lyra, fractura, explosión, fragmentos,
+aparición canónica de Lavender, música `dandara-legacy.mp3` y el
+estado melancólico. Una vez que la secuencia entra en `idle`
+(aproximadamente 15,2 s después de pulsar **ENTRAR**), el diálogo
+comienza **automáticamente**. Solo se activa con
+`?previewNarrative=1`.
 
-## Cómo abrir la prueba
+**Vista de prueba:** `index.html?previewNarrative=1`.
+`narrative-lab.html` redirige allí para no mantener una
+experiencia alternativa que no represente a Chispa.
 
-`index.html?previewNarrative=1`
+## Cambios corregidos tras prueba en iPhone
 
-La URL `narrative-lab.html?previewNarrative=1` ahora **redirige** a
-`index.html?previewNarrative=1`, para evitar un segundo diseño que
-no representa la experiencia final.
+- Las 62 burbujas usan DOM **precompuesto**: todas las palabras
+  ocupan su posición final antes de comenzar la animación.
+  Se revelan letras mediante opacidad, sin redistribuir
+  las líneas o cambiar la altura mientras se escribe.
+- Los mensajes permanecen visibles **después** de finalizar
+  el tipeo según su extensión, con tiempo de lectura adicional
+  de entre ~3,4 y ~10,2 s, además de las pausas entre burbujas.
+- Cada burbuja adapta su ancho a la longitud del texto y su
+  alto al contenido. Se mide únicamente cuando cambia el
+  mensaje o el tamaño de ventana.
+- En iPhone, Lavender se desplaza suavemente a la derecha
+  después de la secuencia cinematográfica, dejando sitio para
+  que la burbuja aparezca a su **izquierda**. En pantalla
+  ancha también se prioriza el lateral izquierdo. Si no
+  cabe, hay alternativas de posición que evitan recortes.
+- Conservamos el `LavenderSvgEngine` original, con respiración,
+  estados expresivos canónicos, transiciones, ojos, cuerpo,
+  órbita, luna y estrellas. El diálogo dirige estados como
+  `curious`, `thinking`, `concerned`, `relieved`,
+  `attentive` y `lament`, además de miradas
+  y gestos sutiles. El estado `lament` retoma la respiración
+  lenta después de los gestos breves. Las direcciones del
+  movimiento se coordinan con cada burbuja, no son aleatorias.
+- Sin TTS ni voz artificial: las palabras aparecen solo por
+  escrito, dentro de las burbujas de Lavender.
 
-No es necesario presionar ningún botón ni abrir paneles para que
-Lavender muestre sus mensajes: solo se conserva el botón **ENTRAR**
-original, necesario para comenzar la escena y habilitar el audio en
-los navegadores móviles.
+## Audio
 
-Sin el parámetro `previewNarrative=1`, el flujo original no añade
-el diálogo.
+La partitura original continúa y puede repetirse mientras
+dura el monólogo. Para los sonidos se usan grabaciones
+canónicas procedentes de Lyra POS:
 
-## Comportamiento canónico
+- `lavender_hello.wav`
+- `lavender_talking.wav`
+- `lavender_thinking.wav`
+- `lavender_yes.wav`
+- `lavender_no.wav`
+- `lavender_absorb.wav`
+- `lavender_excited.wav`
+- `lavender_laugh.wav`
+- `lavender-sad.wav` (ya integrado en Chispa)
 
-- **Personaje**: el mismo `LavenderSvgEngine` SVG de
-  `lavender-runtime/dist/`, montado mediante `ChispaLavenderHost`.
-  La geometría y las animaciones corporales no se reimplementan ni alteran.
-- **Burbujas**: adaptación web de las reglas de
-  `lib/core/mascot/companion/lavender_speech.dart` del proyecto Lyra POS:
-  paleta lila, fondo oscuro, cola orientada hacia Lavender, entrada suave,
-  escritura gradual y pausas según la puntuación.
-  Es una adaptación de interfaz al DOM, **no** el widget Flutter original.
-- **Movimiento**: el motor sigue reproduciendo `lament` y el movimiento
-  melancólico. El diálogo solo orienta discretamente la mirada entre
-  secciones.
-- **Sonidos**: `lavender_hello.wav`, `lavender_talking.wav` y
-  `lavender_thinking.wav`, copiados sin cambiar sus bytes del repositorio
-  original Lyra POS. Suenan solo de forma ocasional (en la prueba,
-  con al menos 24 s entre vocalizaciones) a volumen bajo.
-- **Audio musical**: la pista original
-  `assets/music/dandara-legacy.mp3` sigue reproduciéndose por
-  `PageMusicDirector`. Solo en la rama y al iniciar el monólogo
-  se habilita la repetición de esa pista.
-- **Sin voz sintética, TTS ni locución**: Lavender únicamente escribe
-  mediante burbujas, con sus vocalizaciones no verbales.
-- **Narrativa**: texto completo en primera persona, con referencias
-  a *Heavy* y *Apocalypse*; la letra de esta última se reduce
-  a una cita muy breve y el resto es interpretación personal.
+Se reproducen con un enfriamiento mínimo de 15 s,
+a volúmenes moderados y con una leve reducción temporal
+de la música (sin pausarla), únicamente en momentos
+significativos. Se cargan de manera asíncrona después
+de que termina la introducción cinematográfica.
 
-## Archivos
+## Pruebas
 
-- `cosmic/narrative-preview.js`: narración, burbujas, escritura,
-  anclaje responsive y sonidos discretos.
-- `cosmic/narrative-preview.css`: presentación de burbujas.
-- `cosmic/cosmic-event.js`: puente opt-in tras la secuencia original.
-- `index.html`: carga del módulo de ensayo tras `script.js`.
-- `assets/lavender/sfx/`: tres vocalizaciones originales de Lyra POS.
-- `narrative-lab.html`: enlace heredado, ahora redirige a la
-  experiencia original.
+`node --test cosmic/test/narrative-preview.test.mjs`
 
-## Pendiente para aprobación de producción
+Pruebas de regresión: no afectar el flujo habitual sin
+el parámetro de prueba; arranque automático al entrar en idle;
+texto sin relayout; disposición izquierda en teléfono; recorrido
+completo de 62 mensajes; más de una vocalización y sin voz TTS.
 
-1. Ejecutar la experiencia completa en Safari iOS con medios cargados.
-2. Verificar disposición de burbujas sobre Lavender en orientaciones
-   vertical/horizontal, y con zoom y texto grande.
-3. Confirmar que `ENTRAR` habilita la música de fondo y Web Audio.
-4. Ajustar tiempos, pausas, miradas y frecuencias de vocalización
-   después de observar la ejecución real.
-5. Revisar la redacción definitiva con el autor antes de fusionar.
+Además de las pruebas automáticas de lógica, queda por
+validar visualmente en Safari iOS: posición y tamaño,
+duración de lectura, expresiones faciales, niveles
+de mezcla, carga de archivos y ausencia de defectos.
 
-La rama sigue siendo pública porque el repositorio Chispa es público.
-No existe publicación automática en producción por editar esta rama.
+Los mensajes se han incorporado directamente en esta rama
+pública por autorización del propietario. No se han fusionado
+a `main`.
