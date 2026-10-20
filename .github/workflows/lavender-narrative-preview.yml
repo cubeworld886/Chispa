@@ -1,0 +1,24 @@
+name: Chispa Lavender narrative tests
+
+on:
+  push:
+    branches:
+      - lavender-narrative-preview
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  narrative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out rehearsal branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the narrative and music transitions
+        run: node --test cosmic/test/narrative-preview.test.mjs cosmic/test/narrative-score.test.mjs
