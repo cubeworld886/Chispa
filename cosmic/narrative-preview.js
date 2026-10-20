@@ -542,7 +542,7 @@
       const vw = window.innerWidth;
       const length = this.page.text.length;
       const idealWidth = length < 45 ? 177 : length < 80 ? 205 : length < 125 ? 235 : 265;
-      const room = vw <= 640 ? Math.floor(vw * .81) - 54 : 320;
+      const room = vw <= 640 ? Math.floor(vw * .81) - 68 : 320;
       const width = clamp(idealWidth, 156, Math.min(vw - 28, room, vw <= 640 ? 265 : 305));
       this.root.style.width = width + 'px';
       this.bubbleSize.width = width;
