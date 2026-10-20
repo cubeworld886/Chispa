@@ -7,7 +7,7 @@
  */
 (() => {
   'use strict';
-  if (new URLSearchParams(globalThis.location?.search || '').get('previewNarrative') !== '1') return;
+  // Publicado: el diálogo empieza automáticamente tras la aparición de Lavender.
 
   const SECTIONS = Object.freeze([
   {
