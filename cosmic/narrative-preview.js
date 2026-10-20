@@ -48,8 +48,8 @@
       "En Apocalypse, de Cigarettes After Sex, hay una parte que me hace pensar justo en eso.",
       "Dice: «Come on and haunt me».",
       "No sé cómo explicártelo, pero hay días en los que me identifico mucho con esas palabras.",
-      "Porque, aunque decidimos soltarnos, a veces sí quisiera que volvieras a buscarme. Que fueras tú quien me encontrara otra vez.",
-      "No estoy diciendo que debas hacerlo, ni que espere que lo hagas. Simplemente es algo que todavía siento.",
+      "Porque, aunque decidimos soltarnos, a veces sí quisiera que volviéramos a encontrarnos. No sé cuándo ni cómo, pero hay momentos en los que todavía me gustaría volver a verte.",
+      "Y no te lo digo para pedirte que me busques, ni porque espere que lo hagas. Simplemente es algo que todavía siento.",
       "Y me cuesta admitirlo porque también quiero que estés bien, que sigas con tu vida y que no sientas que tienes que volver a mirar hacia atrás."
     ]
   },
