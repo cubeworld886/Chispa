@@ -219,22 +219,26 @@ export class PageMusicDirector {
     return true;
   }
 
-  fadePrimaryForRemaining(remaining) {
+  fadePrimaryForRemaining(remaining, durationSeconds = 35) {
     if (!this.outroUrl || this.destroyed || !this.gainNode || remaining > 11 || remaining < 7) return false;
-    // Start decreasing exactly eleven bubbles before the end. A progressive
-    // four-message fade leads naturally into Yo Quisiera at seven remaining.
-    const progress = Math.max(0, Math.min(1, (remaining - 7) / 5));
-    const target = this.gainValue * progress;
+    if (this.primaryFadeActive) return true;
+    if (remaining !== 11) return false;
+    // The outro is cued by the exact number of remaining bubbles, not a
+    // wall-clock timer. Fade prairie continuously across the next four
+    // messages, with duration estimated from their reading cadence.
     const now = this.audioContext.currentTime;
-    const param = this.gainNode.gain;
+    const duration = Math.max(18, Math.min(105, Number(durationSeconds) || 35));
+    const gain = this.gainNode.gain;
     try {
-      param.cancelScheduledValues(now);
-      param.setValueAtTime(this.currentPrimaryGain, now);
-      param.linearRampToValueAtTime(target, now + 4.2);
-      this.currentPrimaryGain = target;
+      gain.cancelScheduledValues(now);
+      gain.setValueAtTime(this.currentPrimaryGain, now);
+      gain.linearRampToValueAtTime(0, now + duration);
+      this.primaryFadeActive = true;
+      this.primaryFadeStartedAt = now;
+      this.primaryFadeDuration = duration;
       return true;
     } catch (error) {
-      console.warn('[Chispa] Intro ambience fade skipped.', error);
+      console.warn('[Chispa] Prairie fade could not be scheduled.', error);
       return false;
     }
   }
@@ -267,10 +271,12 @@ export class PageMusicDirector {
       if (this.gainNode) {
         const ambientGain = this.gainNode.gain;
         ambientGain.cancelScheduledValues(now);
-        ambientGain.setValueAtTime(this.currentPrimaryGain, now);
+        const actualLevel = Number.isFinite(ambientGain.value) ? ambientGain.value : this.currentPrimaryGain;
+        ambientGain.setValueAtTime(actualLevel, now);
         ambientGain.linearRampToValueAtTime(0, now + 4.0);
       }
       this.currentPrimaryGain = 0;
+      this.primaryFadeActive = false;
       this.outroStarted = true;
       return true;
     } catch (error) {
