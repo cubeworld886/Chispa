@@ -321,7 +321,7 @@ export class CosmicEventController {
       this.audioReady = Number.isFinite(audioT0);
       if (this.audioReady) {
         const lead = Math.max(0, Number(this.audio?.startLeadSeconds) || 0);
-        const cueRemaining = MUSIC_CUE_SECONDS - elapsedAtAudioStart - lead;
+        const cueRemaining = (this.music?.narrativePreviewScore ? EXPLOSION_IMPACT_SECONDS + 0.72 : MUSIC_CUE_SECONDS) - elapsedAtAudioStart - lead;
         if (cueRemaining > 0) {
           const cueAt = audioT0 + cueRemaining;
           if (this.music?.scheduleAt?.(cueAt) === false) {
@@ -411,10 +411,10 @@ export class CosmicEventController {
       this.renderer?.disposeHeavyVfx?.();
     }
 
-    if (!this.musicCued && seconds >= MUSIC_CUE_SECONDS) {
+    if (!this.musicCued && seconds >= (this.music?.narrativePreviewScore ? EXPLOSION_IMPACT_SECONDS + 0.72 : MUSIC_CUE_SECONDS)) {
       this.musicCued = true;
       if (this.audioReady && !this.audioUnavailable && !this.audioClockLost && !this.musicUnavailable
-        && this.music?.startFromBeginning?.() === false) {
+        && this.music?.startFromBeginning?.(this.music?.narrativePreviewScore ? 2.8 : 1.35) === false) {
         // Do not tear down the scene if a mobile stream is still buffering at
         // the cue. Starting it late would break sync; the visual timeline wins.
         this.musicUnavailable = true;
