@@ -234,7 +234,8 @@
         gain.connect(this.destination);
         // Never cancel the long prairie fade for a vocalization. During
         // the outro, duck the active Yo Quisiera stream instead.
-        const fading = this.music?.primaryFadeActive && !this.music?.outroStarted;
+        const fading = (this.music?.primaryFadeActive && !this.music?.outroStarted)
+          || (this.music?.outroStarted && at < (this.music?.outroFadeEndsAt ?? -Infinity));
         const activeGain = this.music?.outroStarted
           ? this.music?.outroGainNode?.gain : this.music?.gainNode?.gain;
         if (activeGain && this.music?.primed && !this.music.destroyed && !fading) {
