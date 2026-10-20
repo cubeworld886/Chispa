@@ -159,7 +159,7 @@ export async function createProductionCosmicController({
     output: audio.getMixOutput(),
     doc,
     legacyElements: ambientElements,
-    gain: 0.68,
+    gain: narrativeScoreAvailable ? 7.2 : 0.68,
   });
   music.narrativePreviewScore = narrativeScoreAvailable;
   const lavender = new deps.ChispaLavenderHost({
