@@ -502,6 +502,7 @@ export class CosmicEventController {
       globalThis.dispatchEvent?.(new CustomEvent('chispa:cosmic-idle', {
         detail: {
           lavender: this.lavender,
+          audio: this.audio,
           music: this.music,
           getResidualTargets: () => this.fracture?.getResidualTargets?.() ?? [],
         },
