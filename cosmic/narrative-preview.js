@@ -557,7 +557,7 @@
       const padding = 14;
       const space = 17;
       const bw = this.bubbleSize.width || 220;
-      const bh = this.root.offsetHeight || this.bubbleSize.height || 130;
+      const bh = this.bubbleSize.height || this.root.offsetHeight || 130;
       this.bubbleSize.height = bh;
       const cx = r.left + r.width * .5;
       const cy = r.top + r.height * .5;
