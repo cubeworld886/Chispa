@@ -854,6 +854,18 @@ document.querySelectorAll(".close-info").forEach(btn => {
   // Para pausar/reanudar de verdad
   let rafId = null;
   let meteorTimer = null;
+  let canvasInitialized = false;
+  // After the cinematic, the constellation is a backdrop to Lavender's letter.
+  // Redraw the original stars and meteors less frequently instead of doing
+  // 60 full-screen canvas clears per second for several minutes.
+  let narrativeIdle = false;
+  const MAX_SKY_FPS = lowPowerMode ? 24 : 40;
+  const NARRATIVE_SKY_FPS = lowPowerMode ? 12 : 24;
+  window.addEventListener("chispa:cosmic-idle", () => {
+    narrativeIdle = true;
+    last = 0;
+    lastDrawAt = 0;
+  }, { once: true });
 
   function getDpr() {
     const cap = lowPowerMode ? 1.5 : 2;
@@ -1048,12 +1060,17 @@ document.querySelectorAll(".close-info").forEach(btn => {
 
   // Loop con pausa real cuando la pestaña no está visible
   let last = 0;
+  let lastDrawAt = 0;
   function tick(now) {
     rafId = requestAnimationFrame(tick);
     if (document.hidden) return;
+    const fps = narrativeIdle ? NARRATIVE_SKY_FPS : MAX_SKY_FPS;
+    const frameMs = 1000 / fps;
+    if (lastDrawAt && now - lastDrawAt < frameMs * 0.92) return;
 
-    const dt = Math.min(34, now - last || 16.7); // clamp (ms)
+    const dt = Math.min(125, now - last || frameMs);
     last = now;
+    lastDrawAt = now;
     const dtFactor = dt / 16.7;
 
     WIND.t += 0.002 * dtFactor;
@@ -1064,6 +1081,8 @@ document.querySelectorAll(".close-info").forEach(btn => {
 
   function start() {
     if (!canvas || !ctx) return;
+    last = 0;
+    lastDrawAt = 0;
     if (rafId === null) rafId = requestAnimationFrame(tick);
     scheduleNextMeteor();
   }
@@ -1080,6 +1099,8 @@ document.querySelectorAll(".close-info").forEach(btn => {
   }
 
   function initCanvas() {
+    if (canvasInitialized) return;
+    canvasInitialized = true;
     canvas = ensureCanvas();
     if (!canvas) return;
 
