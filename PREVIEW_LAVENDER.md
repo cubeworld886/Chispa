@@ -84,3 +84,52 @@ de mezcla, carga de archivos y ausencia de defectos.
 Los mensajes se han incorporado directamente en esta rama
 pública por autorización del propietario. No se han fusionado
 a `main`.
+
+
+## Partitura final integrada: archivos originales verificados
+
+La rama incluye **los dos MP3 originales exactos**, tal como fueron
+adjuntados, sin compresión adicional ni recortes:
+
+- `assets/music/viento-en-la-pradera.mp3` — 23,326,379 bytes (30:08).
+  Git blob: `05620f19f83854e909e5543dd5975a9da0a215d0`;
+  SHA-256: `ad51088cd341e03e9c8407bbab1b713234c5702d1b7a93ef235a6c259c3d25f6`.
+- `assets/music/yo-quisiera.mp3` — 2,273,280 bytes (2:39).
+  Git blob: `e67acc1c5cbd68190ef1be7cc896c7b151347357`;
+  SHA-256: `ff050b09181e166381c6082891b4c3709e92f5781ce021356be7c57b053bd4a4`.
+
+Las huellas SHA-256 de GitHub Actions y los Git blobs coinciden
+exactamente con los originales.
+
+**Cue de pradera:** `EXPLOSION_IMPACT_SECONDS + 0.72` (aprox.
+3,92 s tras ENTRAR); el volumen entra suavemente durante 2,8 s.
+
+**Transición final:** cuando faltan **11 burbujas**, la pradera comienza
+una bajada continua calculada según la lectura de las próximas cuatro
+burbujas. Cuando faltan **7 burbujas**, `Yo Quisiera` comienza desde
+el principio con 6,2 s de entrada gradual. Los sonidos ocasionales
+de Lavender no cancelan ni reinician esas curvas de volumen.
+
+En iPhone, ambas pistas se habilitan desde el botón inicial ENTRAR,
+usando elementos HTMLAudio y el mismo mezclador Web Audio. La página
+principal `main` y su banda sonora anterior no se han modificado.
+
+**Transformación canónica thinking:** el motor original bloqueaba
+`galaxyMorph` bajo `cinematicLock`. Esa restricción se retira solo
+al comenzar la narración, después del estado `idle`, para habilitar
+la transformación completa, manteniendo el motor original sin parches
+sobre su geometría.
+
+**Aún pendiente:** prueba visual y de mezcla real en Safari iOS y
+revisión subjetiva del ritmo de las palabras y expresiones.
+
+## Pruebas automáticas
+
+GitHub Actions ejecuta `node --test` con:
+
+- `cosmic/test/narrative-preview.test.mjs`
+- `cosmic/test/narrative-score.test.mjs`
+
+El ensamblado sin pérdida de la pradera se verificó además mediante
+un workflow temporal en GitHub Actions que eliminó los fragmentos
+binarios al concluir y dejó solamente el MP3 original reconstruido.
