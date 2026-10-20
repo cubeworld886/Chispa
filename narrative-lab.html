@@ -69,6 +69,14 @@
       actor.enterLament();
       actor.startMelancholicIdle(() => []);
       status.textContent = 'Motor canónico de Lavender listo';
+      // Deferred scripts can finish out of order on slower iPhones. Await the
+      // query-gated narrator before sending the ready signal.
+      for (let attempts = 0; attempts < 120 && !window.__chispaNarrativePreview; attempts += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      if (!window.__chispaNarrativePreview) {
+        throw new Error('La interfaz narrativa no terminó de cargar.');
+      }
       window.dispatchEvent(new CustomEvent('chispa:cosmic-idle', {
         detail: {lavender: actor, music: null, getResidualTargets: () => []}
       }));
