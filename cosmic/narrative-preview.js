@@ -324,7 +324,12 @@
       // Pause her random idle gazes to let the scripted acting beats be deliberate.
       this.lavender?.idle?.stop?.();
       this.lavender?.engine?.resumeAnimation?.();
-      this.lavender?.engine?.setState?.('lament');
+      // The cinematic performance rig was left locked by the intro. That
+      // deliberately disables full body morphs (including the thinking
+      // galaxy). Unlock only AFTER the original cinematic has finished.
+      this.lavender?.engine?.setCinematicLock?.(false);
+      this.lavender?.engine?.setCinematicPerformance?.(true);
+      this.lavender?.engine?.setState?.('attentive');
       if (this.music?.track && !this.music.destroyed) this.music.track.loop = true;
       this.vocals.preload().catch(() => {});
     }
@@ -420,7 +425,10 @@
       try {
         rig.setState?.(state);
         const softer = state === 'lament' || state === 'concerned';
-        rig.setHeadTurn?.(state === 'curious' || state === 'thinking' ? -.040 : state === 'relieved' ? .026 : -.010);
+        rig.setHeadTurn?.(state === 'curious' || state === 'thinking' ? -.060 : state === 'relieved' ? .035 : -.015);
+        const thinkingMorph = state === 'thinking';
+        rig.setCinematicFocus?.(thinkingMorph ? .26 : state === 'relieved' ? .21 : .13);
+        rig.setOrientationYaw?.(thinkingMorph ? -.08 : state === 'curious' ? -.17 : state === 'attentive' ? -.21 : state === 'relieved' ? .08 : -.035);
         rig.setSceneMotion?.({
           orbitOpacity: softer ? .25 : .38,
           crescentOpacity: softer ? .26 : .39,
@@ -433,7 +441,9 @@
         } else if (state === 'thinking' || state === 'confused') {
           this.lavender.lookAtWorldPoint?.(.36, .47, { normalized: true });
         } else {
-          this.lavender.lookAtWorldPoint?.(.45, .52, { normalized: true });
+          // Lavender occasionally reads her own bubble rather than looking
+          // into the camera for every single sentence.
+          this.lavender.lookAtWorldPoint?.(.27, .49, { normalized: true });
         }
       } catch (error) {
         console.warn('[Chispa][Lavender] Acting beat failed', error);
@@ -441,12 +451,12 @@
       if (state !== 'lament') {
         // Hold the expressive state long enough to act, then return to
         // Lavender's long-breath canonical melancholy rather than freezing it.
-        const hold = clamp(1800 + page.text.length * 8, 2300, 3800);
+        const hold = clamp(2800 + page.text.length * 24, 3600, 7400);
         this.addActingTimer(() => {
           rig.setState?.('lament');
           this.currentActing = 'lament';
           if (page.feel === 'regret' || page.feel === 'farewell') this.lavender.lookDown?.();
-          else this.lavender.lookAtWorldPoint?.(.48, .53, { normalized: true });
+          else this.lavender.lookAtWorldPoint?.(.36, .52, { normalized: true });
         }, hold);
       } else {
         this.addActingTimer(() => {
@@ -460,6 +470,11 @@
       this.index += 1;
       if (this.index >= PAGES.length) return this.finish();
       this.page = PAGES[this.index];
+      const remaining = PAGES.length - this.index;
+      // Eleven messages before the end: lower the prairie sound one passage
+      // at a time. Seven before the end: start Yo Quisiera with a slow fade.
+      if (remaining >= 7 && remaining <= 11) this.music?.fadePrimaryForRemaining?.(remaining);
+      if (remaining === 7) this.music?.startNarrativeOutro?.();
       this.charIndex = 0;
       this.root.classList.remove('is-visible', 'is-written');
       this.root.dataset.feel = this.page.feel;
@@ -663,6 +678,9 @@
         bubbleSide: this.root.dataset.side,
         actingState: this.currentActing,
         originalMusicLoop: this.music?.track?.loop ?? false,
+        scoreReady: Boolean(this.music?.narrativePreviewScore),
+        outroStarted: Boolean(this.music?.outroStarted),
+        remaining: Math.max(0, PAGES.length - this.index),
         vocalCuesPlayed: this.vocals.cuesPlayed,
         speechSynthesis: false,
       });
