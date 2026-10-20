@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#070510"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>Chispa · Ensayo de Lavender (no publicado)</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; overflow: hidden;
+      background: radial-gradient(ellipse at 46% 38%,#1a1534 0%,#090715 45%,#03030b 100%);
+      color:#e9e0f5; font-family:system-ui,-apple-system,sans-serif;
+    }
+    #lab-sky { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; opacity:.68; }
+    #lab-actor { position:fixed; inset:0; z-index:40; pointer-events:none; }
+    #lab-space-glow {position:fixed; inset:0; pointer-events:none; opacity:.55;
+      background:radial-gradient(circle at 50% 50%,rgba(153,109,217,.08),transparent 35%);
+    }
+    #lab-header { position:fixed; left:max(20px,env(safe-area-inset-left)); top:max(23px,env(safe-area-inset-top)); z-index:50; pointer-events:none; }
+    #lab-header span { display:block; font:600 10px/1.5 system-ui,sans-serif;letter-spacing:.26em;color:#e9d9fa;}
+    #lab-header p {margin:9px 0 0; font:12px/1.5 Georgia,serif;letter-spacing:.02em;color:rgba(218,200,242,.53);}
+    #lab-status { position:fixed; bottom:max(22px,env(safe-area-inset-bottom)); left:max(18px,env(safe-area-inset-left)); z-index:80;
+      font:500 10px/1.6 system-ui,sans-serif;letter-spacing:.09em;color:rgba(213,188,240,.56);max-width:220px;pointer-events:none;}
+    .lab-star { animation:lab-twinkle 3.5s ease-in-out infinite; }
+    @keyframes lab-twinkle {0%,100%{opacity:.75;filter:drop-shadow(0 0 2px rgba(187,147,255,.5));}50%{opacity:1;filter:drop-shadow(0 0 9px rgba(187,147,255,.85));}}
+    #lab-sky path { stroke:rgba(195,169,249,.28);fill:none;stroke-width:1.6; }
+    #lab-sky circle { fill:#f5eeff; }
+    @media (max-width:650px) {
+      #lab-header {top:max(14px,env(safe-area-inset-top));left:16px;}
+      #lab-status {top:max(59px,calc(env(safe-area-inset-top) + 47px));bottom:auto;left:16px;opacity:.72;}
+      #lab-sky {opacity:.42;}
+    }
+  </style>
+  <script src="cosmic/narrative-preview.js" defer></script>
+</head>
+<body>
+  <svg id="lab-sky" viewBox="0 0 900 700" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <g transform="rotate(-10 600 400) translate(0 -100)">
+      <path d="M720 190 L640 270 L510 360 L520 640 L660 580 L640 270"/>
+      <circle cx="720" cy="190" r="5" class="lab-star"/>
+      <circle cx="640" cy="270" r="3.5" class="lab-star" style="animation-delay:.8s"/>
+      <circle cx="510" cy="360" r="3.5" class="lab-star" style="animation-delay:1.4s"/>
+      <circle cx="660" cy="580" r="3.5" class="lab-star" style="animation-delay:.4s"/>
+      <circle cx="520" cy="640" r="3.5" class="lab-star" style="animation-delay:1.8s"/>
+    </g>
+  </svg>
+  <div id="lab-space-glow" aria-hidden="true"></div>
+  <div id="lab-actor" aria-label="Lavender canónica, con motor de animaciones real"></div>
+  <header id="lab-header"><span>CHISPA / LAVENDER</span><p>Las palabras que quedaron · laboratorio</p></header>
+  <div id="lab-status" role="status">Preparando a Lavender…</div>
+  <script type="module">
+    const status = document.getElementById('lab-status');
+    try {
+      const assetBase = await import('./lavender-runtime/dist/runtimeAssetBase.js');
+      assetBase.setLavenderAssetBase(new URL('./', import.meta.url).href);
+      const { LavenderSvgEngine } = await import('./lavender-runtime/dist/renderer/LavenderSvgEngine.js');
+      const { ChispaLavenderHost } = await import('./cosmic/lavender-host.js');
+      const actor = new ChispaLavenderHost({
+        container: document.getElementById('lab-actor'),
+        Engine: LavenderSvgEngine,
+        reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+      });
+      await actor.mount();
+      actor.revealCentered();
+      actor.setRevealProgress(1);
+      actor.enterLament();
+      actor.startMelancholicIdle(() => []);
+      status.textContent = 'Motor canónico de Lavender listo';
+      window.dispatchEvent(new CustomEvent('chispa:cosmic-idle', {
+        detail: {lavender: actor, music: null, getResidualTargets: () => []}
+      }));
+      window.addEventListener('pagehide', () => actor.destroy(), {once:true});
+    } catch (error) {
+      console.error('[Chispa][Laboratorio] No se pudo iniciar Lavender canónica.',error);
+      status.textContent = 'No se pudo iniciar Lavender. Comprueba la consola o inténtalo de nuevo.';
+    }
+  </script>
+</body>
+</html>
