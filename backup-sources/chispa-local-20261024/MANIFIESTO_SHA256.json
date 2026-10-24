@@ -1,0 +1,542 @@
+{
+  "format": "chispa-local-worktree-snapshot-v1",
+  "generated": "2026-10-24",
+  "repository": "cubeworld886/Chispa",
+  "base_branch": "main",
+  "base_commit": "fe52c2943c78d0aa006fede378c9f5270e91b55c",
+  "backup_branch": "backup/emergency-getse-chispa-20261024",
+  "source_root": "C:\\Aplicaciones_Lyra_Lavender\\Chispa",
+  "source_files": 75,
+  "source_bytes": 75469669,
+  "unchanged_files_reused_from_base": 66,
+  "overlay_files": 75,
+  "overlay_bytes": 75469669.0,
+  "files": [
+    {
+      "path": "Altair-2.mp3",
+      "size_bytes": 4835715,
+      "sha256": "f6bade5b330dc45d62fd149a8d97e15b235e051970231a06e53d0f52cca62e50",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Altair-2.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Altair.mp3",
+      "size_bytes": 4835715,
+      "sha256": "f6bade5b330dc45d62fd149a8d97e15b235e051970231a06e53d0f52cca62e50",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Altair.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Apocalypse.mp3",
+      "size_bytes": 6964173,
+      "sha256": "fefd9a66d4f34646d2ef374a93e931194a59c9582c296e76d80def8c9ea74a38",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Apocalypse.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/cosmic/sfx/constellation-glass-shatter.mp3",
+      "size_bytes": 129024,
+      "sha256": "f6cae825b8d04764f379da2f7af5e631f919616092e418e4af87d36125ca7b7b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/cosmic/sfx/constellation-glass-shatter.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/cosmic/sfx/exploding-building-2.mp3",
+      "size_bytes": 225024,
+      "sha256": "81f2ce6d1dab3fa1e3de5979a2a321ed3a34059a661c0084fc8b17fe9906a101",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/cosmic/sfx/exploding-building-2.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/cosmic/sfx/lavender-sad.wav",
+      "size_bytes": 168794,
+      "sha256": "306d4481b290dd3b8baa575e71f68a941779c4c09c016adb0f740f5759d15689",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/cosmic/sfx/lavender-sad.wav",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/cosmic/sfx/rocks-gravel-slide.mp3",
+      "size_bytes": 66048,
+      "sha256": "cf547c72ac6da227bbe65ea33870b31633d09ba2cd4462b4b18b6c43effc7444",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/cosmic/sfx/rocks-gravel-slide.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/lavender/materials/body-cinematic.webp",
+      "size_bytes": 437620,
+      "sha256": "a93e37caaecd662141c6231c89d4a88bf6ebbf411226450d0bfaf2e7706f7306",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/lavender/materials/body-cinematic.webp",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/lavender/materials/crescent-cinematic.webp",
+      "size_bytes": 77752,
+      "sha256": "2704b8a2e89a61cf8cdcddfedb14e56c1cdd1281e342d14eb03fd9f7f7a847f2",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/lavender/materials/crescent-cinematic.webp",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/lavender/materials/eye-left-cinematic.webp",
+      "size_bytes": 68548,
+      "sha256": "fd9fbfcfd1f79194a500cb7a8a9c21465fe58840eb225b74e6645a87137d3fed",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/lavender/materials/eye-left-cinematic.webp",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/lavender/materials/eye-right-cinematic.webp",
+      "size_bytes": 67544,
+      "sha256": "ebeebf0160222b234e5da527a36047bdb948d421cba3174940a72354bad9caf6",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/lavender/materials/eye-right-cinematic.webp",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "assets/music/dandara-legacy.mp3",
+      "size_bytes": 6172128,
+      "sha256": "c5dfbabebd335567bc0ce35bf60b3a7549b8ef34342a306a000aeee333af2608",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/assets/music/dandara-legacy.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Care_For_You.mp3",
+      "size_bytes": 3757381,
+      "sha256": "5ecab5b71b2931eacd7d30c5b9a240a0320bb2486ad201e443443a750b84ac0d",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Care_For_You.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Compass.mp3",
+      "size_bytes": 4110974,
+      "sha256": "64c1ddc23a397c689a7ddd72a3463f45b678fc34787320d7c2de5f3955a56586",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Compass.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/bootstrap.js",
+      "size_bytes": 9835,
+      "sha256": "16519f5887b445432ce2ffbcc2bf34200739d43e5b76884cfc6be21c16f8701f",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/bootstrap.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/constellation-fracture.js",
+      "size_bytes": 18390,
+      "sha256": "749032c682791a4a3c3bba93a409fc37053df3983d3d3226a775f73c0207bad6",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/constellation-fracture.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/cosmic-audio.js",
+      "size_bytes": 13879,
+      "sha256": "3d0ad1cd6c61630dd0c1c3f6942ed5c1fb7a531388a1b605564401ded0583dc0",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/cosmic-audio.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/cosmic-event.js",
+      "size_bytes": 23295,
+      "sha256": "0ac5d0e8e4e122843c5c140c1e41a01b33dd9cc755c2156266b5c6a244535f1f",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/cosmic-event.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/cosmic-renderer.js",
+      "size_bytes": 7604,
+      "sha256": "dc82ca04a1e6b34c758bc2eea414c14cacaf7ebc08afbf143231c8b159147d0e",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/cosmic-renderer.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/cosmic.css",
+      "size_bytes": 4621,
+      "sha256": "b6c77875e850e4bcb2885c24d58f318216431e7cd2c17a4a42f71e67dd90a062",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/cosmic.css",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/lavender-host.js",
+      "size_bytes": 7794,
+      "sha256": "ed78c78c60dd6deb0eae38a0634f59cfba260e032e5564ea64544b3a22f88e1b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/lavender-host.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/melancholic-idle.js",
+      "size_bytes": 3930,
+      "sha256": "2e7b7c84e2a06c32024040a45a258a7a9808b5245b7624c09e767c5738512bab",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/melancholic-idle.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/page-music.js",
+      "size_bytes": 7683,
+      "sha256": "7c024cfb185768577a4769ac8db599eb2a5d7896a0812f24c573e4ec07d32e7f",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/page-music.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/production-runtime.js",
+      "size_bytes": 7467,
+      "sha256": "19277ed693ab0b9b5834579ccfceef43a6dfadccc0c8b1d991500b762bc88a21",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/production-runtime.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/quality-profile.js",
+      "size_bytes": 2328,
+      "sha256": "d96cdda2212d8b8c3c7a383ee8c218ba820c964e120fe1082fb357698025b2cb",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/quality-profile.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/sfx-manifest.js",
+      "size_bytes": 1836,
+      "sha256": "c728ef038ff4d471ad7c7d196ef078e96b73e8a71c5afbe57a5bccc6a528c5a7",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/sfx-manifest.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/critical-readiness.test.mjs",
+      "size_bytes": 12402,
+      "sha256": "e27d844ede63fdb8b2bcd8a7170b8fb52861e8086387b34d721b44a878bfa60c",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/critical-readiness.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/fragment-impact.test.mjs",
+      "size_bytes": 2125,
+      "sha256": "d7fb6bbce42752bcc97e4ba2f5f65c9033c427a3aefce1d2831608beea285d27",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/fragment-impact.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/impact-beat.test.mjs",
+      "size_bytes": 3332,
+      "sha256": "071d2b887a11fe3e616d562d82158b3e15f3798e1a844ad6448ee63235a234b2",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/impact-beat.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/lament-idle.test.mjs",
+      "size_bytes": 1478,
+      "sha256": "795d03cd54b3e9a37b873aba42dabb2eddf14695455b363474a8ca788c95414e",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/lament-idle.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/loader-presentation.test.mjs",
+      "size_bytes": 3560,
+      "sha256": "d9e8b8c00b94fb99c1fe667c326380237c35a8f500694d093c77cd75df7ab474",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/loader-presentation.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/mobile-performance.test.mjs",
+      "size_bytes": 8039,
+      "sha256": "3552b2285e483aecb0e1cf7b28ef16db98b7df54b66f91eb08757e6008d52c17",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/mobile-performance.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/mobile-readiness.test.mjs",
+      "size_bytes": 9390,
+      "sha256": "981ba4d0d9935a078e0447441a984d6a355a88f840ed8f8158972cbc8ff0fd47",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/mobile-readiness.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/test/sfx-replacement.test.mjs",
+      "size_bytes": 3270,
+      "sha256": "fbba6e1b5d4770490ce5e60dd850a826e35e7bb5b054f8ef75fd4e800f4035d9",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/test/sfx-replacement.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/timeline.js",
+      "size_bytes": 4214,
+      "sha256": "e796c881f4251a9f052577bc4acdc66e302ea0f49252f1707f95d75e8b4d3a4e",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/timeline.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/vfx-state.js",
+      "size_bytes": 2415,
+      "sha256": "a70ebefcd51cf09982202b4a4c681cb233b50baa41e63dcffcc99f22d169a538",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/vfx-state.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "cosmic/webgl-adapter.js",
+      "size_bytes": 21970,
+      "sha256": "f105eb35d90fed4e554688c98899567878fede8468e4ce6971e8cca7ffc5ef0b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/cosmic/webgl-adapter.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Ever_Forever.mp3",
+      "size_bytes": 3507441,
+      "sha256": "7ef72c97b9fedddb4046362bfd82903a4e3062667e9ea5e3e90ff3fcba1c1117",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Ever_Forever.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Hasta_donde_te_quiero.mp3",
+      "size_bytes": 3511621,
+      "sha256": "2ec2e1cb07e6cc0ae016fe6622684af46bec715b3b25596b5b4c723e6ce6755f",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Hasta_donde_te_quiero.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Heavenly.mp3",
+      "size_bytes": 6884551,
+      "sha256": "3e19c82819107ea51342f8ea610f18fd8657ff8517ba804a3ae2181d18ad8eb1",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Heavenly.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "index.html",
+      "size_bytes": 28143,
+      "sha256": "e0dec68eb9f055860543875e9970a2e3a890f333072f16b10f8b085a42dd1d2b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/index.html",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "klipartz.com.png",
+      "size_bytes": 46307,
+      "sha256": "05eeac4fe6aea2782eae3266385f84eacc5ecbdb2f7b856f57a62dce509019ca",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/klipartz.com.png",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/core/motion.js",
+      "size_bytes": 62046,
+      "sha256": "1ef70ec16bc0efdbac6ab6b66109e85cf505cf673c2b0e864517880bb2a9d7dd",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/core/motion.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/core/types.js",
+      "size_bytes": 1225,
+      "sha256": "e78d5cae8292e8a39f8b9daaafff901d61b3cfe6fb798168d62e7c91308c20ec",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/core/types.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/geometry/lavenderGeometry.js",
+      "size_bytes": 23992,
+      "sha256": "4de222a50de501a259faff33f997f2872d0991122ea97b624ed0959e696c73b5",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/geometry/lavenderGeometry.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/geometry/morphGeometry.js",
+      "size_bytes": 16934,
+      "sha256": "f932ea6ac354d1b87014885f156cc1aec0e737f4902c0f224ac71cd3904382cf",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/geometry/morphGeometry.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/geometry/morphTargets.js",
+      "size_bytes": 20876,
+      "sha256": "032882adaca4796c88d499fa5a5f9be5443b5cc667505d7eebc6e1a1f21ccce7",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/geometry/morphTargets.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/geometry/posWebIdentity.js",
+      "size_bytes": 10776,
+      "sha256": "6d8fe2687b364702ca0f08397416044f02e789a613b925a22ad6703822961697",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/geometry/posWebIdentity.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/materials/materialManifest.js",
+      "size_bytes": 1054,
+      "sha256": "bb50d82a1a8c579ab7d98a9fee99342e5c0bd2d9b1a44ac00115be9ccffe29b3",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/materials/materialManifest.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/performance/LavenderPerformanceGovernor.js",
+      "size_bytes": 1338,
+      "sha256": "bce7902a9bdd09eb0e0dc8b605736645a1b29d114e744e10a444942a954a6449",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/performance/LavenderPerformanceGovernor.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/renderer/LavenderSvgEngine.js",
+      "size_bytes": 93899,
+      "sha256": "6b2944ab3cb39f133308a9544a6d3b50ce942a2a6e7238fbe975788786d10948",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/renderer/LavenderSvgEngine.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/runtimeAssetBase.js",
+      "size_bytes": 524,
+      "sha256": "5820d77e6f5bbbe4315ec0bbec59f2d9bea9d93d4c7874ff8a29ec868f6e4c47",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/runtimeAssetBase.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/svg/keyframeGeometry.js",
+      "size_bytes": 214328,
+      "sha256": "159b9388fbf2157019b083a06cfd57388c6c969bc8bcd4b3fbffc0864346e24e",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/svg/keyframeGeometry.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/svg/ornamentKeyframes.js",
+      "size_bytes": 5171,
+      "sha256": "711032dc8daa9ff6f487412fcf9a057d194ab1f827bb3ca5dbc30b1392672873",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/svg/ornamentKeyframes.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/dist/svg/trailKeyframes.js",
+      "size_bytes": 3975,
+      "sha256": "71bb40a84c01b43c49fef807398cfb9c4701f95d62485f491cf264bbc313e49c",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/dist/svg/trailKeyframes.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "lavender-runtime/test/lament-motion.test.mjs",
+      "size_bytes": 1670,
+      "sha256": "f05ab014ddfb5771287a97eaa4ac5c94dd1b24900d22a43ce35f40df43dedb11",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/lavender-runtime/test/lament-motion.test.mjs",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Mi_Corazon.mp3",
+      "size_bytes": 6361965,
+      "sha256": "cfad629a0167ed09f8af2a747ea43bc349445642b97130ad7a03a6910c2ec5fc",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Mi_Corazon.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "opciones.mp3",
+      "size_bytes": 3606288,
+      "sha256": "75382990cd7ec124561391c18c09cb906ebb1f94d69083894dddfc4c62d8e82e",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/opciones.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 28,
+      "sha256": "ce73fc34e644c56efa5904cd2ea9fa402ec8dd9f99690451972013b69a62a67b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/README.md",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Sanctuary.mp3",
+      "size_bytes": 4321773,
+      "sha256": "9a78eabc12104dd6b6baf89125802283622fd51409cf71c17fb1d6a63a2cdf64",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Sanctuary.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "script.js",
+      "size_bytes": 36307,
+      "sha256": "a56a2babc428929f7f91ad4c9176424961898f8c2a87922e3ace4a559deb688f",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/script.js",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "SFX_SOURCES.txt",
+      "size_bytes": 1313,
+      "sha256": "cf02a573532b4a524bc5f2dae8516a64b157bcc4e731335ed5895cc4588c805d",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/SFX_SOURCES.txt",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "style.css",
+      "size_bytes": 25765,
+      "sha256": "f9c278446b65e44770908e7a189c58ce70739187139fb63c71b84ba297e73977",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/style.css",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_01.jpeg",
+      "size_bytes": 1481668,
+      "sha256": "e6df516e3d1d2aa81b22fe5165cc20f8869a59e338d5485bb22ccf3978baa5f8",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_01.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_02.jpeg",
+      "size_bytes": 97248,
+      "sha256": "d58c6b1e97dc8a30555214d9cf377027054d6f8027451ae3a67c93ab325e5c41",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_02.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_03.jpeg",
+      "size_bytes": 91344,
+      "sha256": "5010423137b78aa967ac7cb6a80aa9e8d174454b3c7e46d1046a7453eb7c5ef8",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_03.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_04.jpeg",
+      "size_bytes": 94325,
+      "sha256": "7576d9d7a8fa8493e43de878fec184b02d97e3c4d1023b80c24b2bd7343fcd35",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_04.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_05.jpeg",
+      "size_bytes": 39358,
+      "sha256": "22426531eea84787ba751c2d25d83ed5e85573c9df2429e69fcfa3fa9a7e2e22",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_05.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_06.jpeg",
+      "size_bytes": 64864,
+      "sha256": "316f7b74ca7c8c168d96c4b956affa448dd8d04fa4221e807bf7161221dd0100",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_06.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_07.jpeg",
+      "size_bytes": 171457,
+      "sha256": "dd2bf25ac5d0995659bfc48294cb301765f9a231968f69de1444fb9be240aecc",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_07.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_08.jpeg",
+      "size_bytes": 437080,
+      "sha256": "33c4f4d9315908e29c3486fc15804ed93b9c0198cb1f370d298cb7f37323e06a",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_08.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_09.jpeg",
+      "size_bytes": 209165,
+      "sha256": "ea9d8f2f8da9313b5087158f97a000941cc7beb54ffdcd3950367d48ab9335f8",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_09.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "suspiro_10.jpeg",
+      "size_bytes": 77230,
+      "sha256": "ed3eb27a0570bd34c607b9a6acb29c3987d369a7d50160bbe57b74b07daed55b",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/suspiro_10.jpeg",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Those_Eyes.mp3",
+      "size_bytes": 5283350,
+      "sha256": "ec66955e12eab80e9300d1455b4862b4828fcbf945860eb6ee738a539bd8e362",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Those_Eyes.mp3",
+      "storage": "exact_local_overlay"
+    },
+    {
+      "path": "Yellow.mp3",
+      "size_bytes": 6535973,
+      "sha256": "e76380b4ed783edc1e4b915698960b47ccb148234382fe1dd2d9c398cc48b105",
+      "backup_path": "backup-sources/chispa-local-20261024/overlay/Yellow.mp3",
+      "storage": "exact_local_overlay"
+    }
+  ],
+  "verification_note": "El restaurador verifica SHA-256 y tamaño antes de copiar; los archivos comunes apuntan al árbol de main en el commit base y las diferencias exactas están bajo overlay/."
+}

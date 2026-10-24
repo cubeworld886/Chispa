@@ -1,0 +1,23 @@
+constellation-glass-shatter.mp3
+Fuente: DRAGON-STUDIO, “Glass Shattering” (grabación de vidrio)
+URL: https://pixabay.com/sound-effects/household-glass-shattering-504035/
+Licencia: Pixabay Content License (uso gratuito; atribución no requerida)
+Uso: fractura inicial de la constelación
+
+exploding-building-2.mp3
+Fuente: floraphonic, “Exploding Building 2” (efecto profesional de explosión)
+URL: https://pixabay.com/sound-effects/film-special-effects-exploding-building-2-190092/
+Licencia: Pixabay Content License (uso gratuito; atribución no requerida)
+Uso: impacto y cuerpo de la explosión
+
+rocks-gravel-slide.mp3
+Fuente: floraphonic, “Rocks And Gravel Slide 3” (grabación de roca y grava)
+URL: https://pixabay.com/sound-effects/film-special-effects-rocks-and-gravel-slide-3-204996/
+Licencia: Pixabay Content License (uso gratuito; atribución no requerida)
+Uso: debris durante la expansión
+
+lavender-sad.wav
+Fuente: asset original de Lyra POS, mapeado por LavenderAudioDirector.ts como lavenderAudioFiles.sad
+URL: local: C:\Aplicaciones_Lyra_Lavender\Lyra_Web_v2_Lavender_Production_C11_WIP43_POS_RUNTIME_LIVE_SWITCH\public\assets\sfx\lavender_sad.wav
+Licencia: asset interno del proyecto; sin licencia pública
+Uso: una vez, cuando Lavender termina de bajar la mirada y asienta su reacción
