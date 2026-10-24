@@ -10,7 +10,7 @@
   "source_bytes": 75469669,
   "unchanged_files_reused_from_base": 66,
   "overlay_files": 75,
-  "overlay_bytes": 75469669.0,
+  "overlay_bytes": 75469669,
   "files": [
     {
       "path": "Altair-2.mp3",
@@ -538,5 +538,8 @@
       "storage": "exact_local_overlay"
     }
   ],
-  "verification_note": "El restaurador verifica SHA-256 y tamaño antes de copiar; los archivos comunes apuntan al árbol de main en el commit base y las diferencias exactas están bajo overlay/."
+  "verification_note": "El restaurador verifica SHA-256 y tamaño antes y después de copiar. Los 75 archivos del snapshot se guardan bajo overlay con preservación exacta de bytes; 66 producen blobs idénticos a main y Git los deduplica.",
+  "main_identical_blob_files": 66,
+  "main_different_blob_files": 9,
+  "restore_policy": "Todos los archivos fuente se guardan bajo overlay con sus bytes exactos; Git deduplica los blobs idénticos."
 }
