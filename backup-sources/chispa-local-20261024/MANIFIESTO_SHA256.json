@@ -538,8 +538,25 @@
       "storage": "exact_local_overlay"
     }
   ],
-  "verification_note": "El restaurador verifica SHA-256 y tamaño antes y después de copiar. Los 75 archivos del snapshot se guardan bajo overlay con preservación exacta de bytes; 66 producen blobs idénticos a main y Git los deduplica.",
+  "verification_note": "El restaurador verifica SHA-256 y tamaño antes y después de copiar. Los 75 archivos del snapshot se guardan bajo overlay con preservación exacta de bytes; 66 producen blobs idénticos a main y Git los deduplica. El ZIP original de distribución se conserva por separado con su SHA-256, manifiesto interno de 61 archivos y CRC verificado.",
   "main_identical_blob_files": 66,
   "main_different_blob_files": 9,
-  "restore_policy": "Todos los archivos fuente se guardan bajo overlay con sus bytes exactos; Git deduplica los blobs idénticos."
+  "restore_policy": "Todos los archivos fuente se guardan bajo overlay con sus bytes exactos; Git deduplica los blobs idénticos.",
+  "archived_package": {
+    "path": "backup-sources/chispa-local-20261024/archive-original/Chispa.zip",
+    "manifest_path": "backup-sources/chispa-local-20261024/archive-original/MANIFIESTO_ARCHIVO_SHA256.json",
+    "size_bytes": 74460289,
+    "sha256": "80218f87df8034e828b72074d7104963812a9e8f99aded7a7835608e6d7f2e96",
+    "zip_entries": 76,
+    "regular_files": 61,
+    "directory_entries": 15,
+    "uncompressed_bytes": 75967789,
+    "crc_check": "PASSED",
+    "exact_matches_to_current_snapshot": 41,
+    "different_files_vs_current_snapshot": 19,
+    "current_snapshot_files_missing": 15,
+    "extra_archive_files": 1,
+    "yuli_hits": 0,
+    "credential_pattern_hits": 0
+  }
 }

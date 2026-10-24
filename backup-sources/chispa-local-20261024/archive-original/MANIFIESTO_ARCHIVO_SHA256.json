@@ -1,0 +1,327 @@
+{
+  "format": "chispa-distribution-archive-manifest-v1",
+  "generated": "2026-10-24",
+  "source_archive_path": "C:\\Aplicaciones_Lyra_Lavender\\Chispa.zip",
+  "archive_path": "archive-original/Chispa.zip",
+  "archive_size_bytes": 74460289,
+  "archive_sha256": "80218f87df8034e828b72074d7104963812a9e8f99aded7a7835608e6d7f2e96",
+  "zip_entry_count": 76,
+  "regular_file_count": 61,
+  "directory_entry_count": 15,
+  "uncompressed_bytes": 75967789,
+  "crc_check": "PASSED",
+  "exact_files_matching_current_snapshot": 41,
+  "differing_files_vs_current_snapshot": 19,
+  "current_snapshot_files_missing_from_archive": 15,
+  "extra_archive_files": 1,
+  "yuli_name_or_text_hits": 0,
+  "high_risk_names": 0,
+  "credential_pattern_hits": 0,
+  "files": [
+    {
+      "path": "Chispa/Altair-2.mp3",
+      "size_bytes": 4835715,
+      "sha256": "f6bade5b330dc45d62fd149a8d97e15b235e051970231a06e53d0f52cca62e50"
+    },
+    {
+      "path": "Chispa/Altair.mp3",
+      "size_bytes": 4835715,
+      "sha256": "f6bade5b330dc45d62fd149a8d97e15b235e051970231a06e53d0f52cca62e50"
+    },
+    {
+      "path": "Chispa/Apocalypse.mp3",
+      "size_bytes": 6964173,
+      "sha256": "fefd9a66d4f34646d2ef374a93e931194a59c9582c296e76d80def8c9ea74a38"
+    },
+    {
+      "path": "Chispa/assets/cosmic/cosmic-event.wav",
+      "size_bytes": 1190744,
+      "sha256": "cb5143b9e8eb2f5c89df9beceabdbff8186287807bcd61cbb2233deb33ca747e"
+    },
+    {
+      "path": "Chispa/assets/lavender/materials/body-cinematic.webp",
+      "size_bytes": 437620,
+      "sha256": "a93e37caaecd662141c6231c89d4a88bf6ebbf411226450d0bfaf2e7706f7306"
+    },
+    {
+      "path": "Chispa/assets/lavender/materials/crescent-cinematic.webp",
+      "size_bytes": 77752,
+      "sha256": "2704b8a2e89a61cf8cdcddfedb14e56c1cdd1281e342d14eb03fd9f7f7a847f2"
+    },
+    {
+      "path": "Chispa/assets/lavender/materials/eye-left-cinematic.webp",
+      "size_bytes": 68548,
+      "sha256": "fd9fbfcfd1f79194a500cb7a8a9c21465fe58840eb225b74e6645a87137d3fed"
+    },
+    {
+      "path": "Chispa/assets/lavender/materials/eye-right-cinematic.webp",
+      "size_bytes": 67544,
+      "sha256": "ebeebf0160222b234e5da527a36047bdb948d421cba3174940a72354bad9caf6"
+    },
+    {
+      "path": "Chispa/assets/music/dandara-legacy.mp3",
+      "size_bytes": 6172128,
+      "sha256": "c5dfbabebd335567bc0ce35bf60b3a7549b8ef34342a306a000aeee333af2608"
+    },
+    {
+      "path": "Chispa/Care_For_You.mp3",
+      "size_bytes": 3757381,
+      "sha256": "5ecab5b71b2931eacd7d30c5b9a240a0320bb2486ad201e443443a750b84ac0d"
+    },
+    {
+      "path": "Chispa/Compass.mp3",
+      "size_bytes": 4110974,
+      "sha256": "64c1ddc23a397c689a7ddd72a3463f45b678fc34787320d7c2de5f3955a56586"
+    },
+    {
+      "path": "Chispa/cosmic/bootstrap.js",
+      "size_bytes": 3637,
+      "sha256": "066f46fc478d893ca3ef51332971ec071bc305b3d827889683021e2da86b4e5a"
+    },
+    {
+      "path": "Chispa/cosmic/constellation-fracture.js",
+      "size_bytes": 16471,
+      "sha256": "219961334120c6feacc9561c83c229e9a0629e3f46d3a559ee4484d40506d352"
+    },
+    {
+      "path": "Chispa/cosmic/cosmic-audio.js",
+      "size_bytes": 4082,
+      "sha256": "12445981b7cbfee9d2f1f26365f95b5a43d99c9c024a0671cc2dfdc403ab9933"
+    },
+    {
+      "path": "Chispa/cosmic/cosmic-event.js",
+      "size_bytes": 12941,
+      "sha256": "d197ccf7572a0d658d12f3723785e86f7d1c5b7eeb34f5a82bf1a63ab59038c1"
+    },
+    {
+      "path": "Chispa/cosmic/cosmic-renderer.js",
+      "size_bytes": 6390,
+      "sha256": "bda0b7e44fe2e7c759c1557c720e78ad59cdd44786de2b1008b423fadc275081"
+    },
+    {
+      "path": "Chispa/cosmic/cosmic.css",
+      "size_bytes": 2194,
+      "sha256": "7de6b3ecee5bedeb9b838a007c774d8778fb217f4b39759d57a64a203d89e5d4"
+    },
+    {
+      "path": "Chispa/cosmic/lavender-host.js",
+      "size_bytes": 6238,
+      "sha256": "140dd72b9b0055c207d8cb2b90a9c8048d8086bcae869b1236826ccef8d9cf5c"
+    },
+    {
+      "path": "Chispa/cosmic/melancholic-idle.js",
+      "size_bytes": 4308,
+      "sha256": "d47f92f46c070c855e3c09aefd7e2c45b1413467d21bf39b3bd544d4d905c0ce"
+    },
+    {
+      "path": "Chispa/cosmic/page-music.js",
+      "size_bytes": 4156,
+      "sha256": "414c76bfebfc10f474d3f137f7dfc2b4a6f027fc8e73154fd7fc37db124113bc"
+    },
+    {
+      "path": "Chispa/cosmic/production-runtime.js",
+      "size_bytes": 3280,
+      "sha256": "90b8060fec61b58055ed02cb680c297d43754553ccb52ea2cc83a122175cb579"
+    },
+    {
+      "path": "Chispa/cosmic/quality-profile.js",
+      "size_bytes": 2295,
+      "sha256": "625a2ae30b657a30ab29b535ab7d64a376707718b7284bb2f0cc13cb0ccca0c6"
+    },
+    {
+      "path": "Chispa/cosmic/timeline.js",
+      "size_bytes": 3646,
+      "sha256": "810a6a19c2041941fed702ade24f02ddcf714e762911c61d80f515c0b69a2d29"
+    },
+    {
+      "path": "Chispa/cosmic/vfx-state.js",
+      "size_bytes": 2422,
+      "sha256": "69d966af259f72b72d43614a6f707039f03cbdf3562a475a1d3c0bdd7507bf16"
+    },
+    {
+      "path": "Chispa/cosmic/webgl-adapter.js",
+      "size_bytes": 17800,
+      "sha256": "4cff28a7f66048b17600f6e3d6a9af2ca84c6d2d7fd330ad628ca4036e3a6b33"
+    },
+    {
+      "path": "Chispa/Ever_Forever.mp3",
+      "size_bytes": 3507441,
+      "sha256": "7ef72c97b9fedddb4046362bfd82903a4e3062667e9ea5e3e90ff3fcba1c1117"
+    },
+    {
+      "path": "Chispa/Hasta_donde_te_quiero.mp3",
+      "size_bytes": 3511621,
+      "sha256": "2ec2e1cb07e6cc0ae016fe6622684af46bec715b3b25596b5b4c723e6ce6755f"
+    },
+    {
+      "path": "Chispa/Heavenly.mp3",
+      "size_bytes": 6884551,
+      "sha256": "3e19c82819107ea51342f8ea610f18fd8657ff8517ba804a3ae2181d18ad8eb1"
+    },
+    {
+      "path": "Chispa/index.html",
+      "size_bytes": 27004,
+      "sha256": "96d3e25b1d3071506a8ab5bf96d67db0caa65178fc3e2875bb0b457514c2d8f4"
+    },
+    {
+      "path": "Chispa/klipartz.com.png",
+      "size_bytes": 46307,
+      "sha256": "05eeac4fe6aea2782eae3266385f84eacc5ecbdb2f7b856f57a62dce509019ca"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/core/motion.js",
+      "size_bytes": 57643,
+      "sha256": "e4c4b96728b8a6e7eea37018bf8a929bcb015285e6aa491af304dc8a946ccf9c"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/core/types.js",
+      "size_bytes": 1225,
+      "sha256": "e78d5cae8292e8a39f8b9daaafff901d61b3cfe6fb798168d62e7c91308c20ec"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/geometry/lavenderGeometry.js",
+      "size_bytes": 23992,
+      "sha256": "4de222a50de501a259faff33f997f2872d0991122ea97b624ed0959e696c73b5"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/geometry/morphGeometry.js",
+      "size_bytes": 16935,
+      "sha256": "769b07531dbc4388502beca3533cfd32135f35e9a5131ef8338811d3ed9b36ea"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/geometry/morphTargets.js",
+      "size_bytes": 20876,
+      "sha256": "032882adaca4796c88d499fa5a5f9be5443b5cc667505d7eebc6e1a1f21ccce7"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/geometry/posWebIdentity.js",
+      "size_bytes": 10776,
+      "sha256": "6d8fe2687b364702ca0f08397416044f02e789a613b925a22ad6703822961697"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/materials/materialManifest.js",
+      "size_bytes": 1054,
+      "sha256": "bb50d82a1a8c579ab7d98a9fee99342e5c0bd2d9b1a44ac00115be9ccffe29b3"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/performance/LavenderPerformanceGovernor.js",
+      "size_bytes": 1353,
+      "sha256": "9a4d1033a46a33157573f22c8a0cf0ac3b622ebb76a09c8abbb30e8bd289a27c"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/renderer/LavenderSvgEngine.js",
+      "size_bytes": 89671,
+      "sha256": "00d9a93c9982726d1e05311d89805bb0202032b505fd398b14861bd7802b8ec4"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/runtimeAssetBase.js",
+      "size_bytes": 524,
+      "sha256": "5820d77e6f5bbbe4315ec0bbec59f2d9bea9d93d4c7874ff8a29ec868f6e4c47"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/svg/keyframeGeometry.js",
+      "size_bytes": 214328,
+      "sha256": "159b9388fbf2157019b083a06cfd57388c6c969bc8bcd4b3fbffc0864346e24e"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/svg/ornamentKeyframes.js",
+      "size_bytes": 5171,
+      "sha256": "711032dc8daa9ff6f487412fcf9a057d194ab1f827bb3ca5dbc30b1392672873"
+    },
+    {
+      "path": "Chispa/lavender-runtime/dist/svg/trailKeyframes.js",
+      "size_bytes": 3975,
+      "sha256": "71bb40a84c01b43c49fef807398cfb9c4701f95d62485f491cf264bbc313e49c"
+    },
+    {
+      "path": "Chispa/Mi_Corazon.mp3",
+      "size_bytes": 6361965,
+      "sha256": "cfad629a0167ed09f8af2a747ea43bc349445642b97130ad7a03a6910c2ec5fc"
+    },
+    {
+      "path": "Chispa/opciones.mp3",
+      "size_bytes": 3606288,
+      "sha256": "75382990cd7ec124561391c18c09cb906ebb1f94d69083894dddfc4c62d8e82e"
+    },
+    {
+      "path": "Chispa/README.md",
+      "size_bytes": 28,
+      "sha256": "ce73fc34e644c56efa5904cd2ea9fa402ec8dd9f99690451972013b69a62a67b"
+    },
+    {
+      "path": "Chispa/Sanctuary.mp3",
+      "size_bytes": 4321773,
+      "sha256": "9a78eabc12104dd6b6baf89125802283622fd51409cf71c17fb1d6a63a2cdf64"
+    },
+    {
+      "path": "Chispa/script.js",
+      "size_bytes": 36307,
+      "sha256": "a56a2babc428929f7f91ad4c9176424961898f8c2a87922e3ace4a559deb688f"
+    },
+    {
+      "path": "Chispa/style.css",
+      "size_bytes": 25765,
+      "sha256": "f9c278446b65e44770908e7a189c58ce70739187139fb63c71b84ba297e73977"
+    },
+    {
+      "path": "Chispa/suspiro_01.jpeg",
+      "size_bytes": 1481668,
+      "sha256": "e6df516e3d1d2aa81b22fe5165cc20f8869a59e338d5485bb22ccf3978baa5f8"
+    },
+    {
+      "path": "Chispa/suspiro_02.jpeg",
+      "size_bytes": 97248,
+      "sha256": "d58c6b1e97dc8a30555214d9cf377027054d6f8027451ae3a67c93ab325e5c41"
+    },
+    {
+      "path": "Chispa/suspiro_03.jpeg",
+      "size_bytes": 91344,
+      "sha256": "5010423137b78aa967ac7cb6a80aa9e8d174454b3c7e46d1046a7453eb7c5ef8"
+    },
+    {
+      "path": "Chispa/suspiro_04.jpeg",
+      "size_bytes": 94325,
+      "sha256": "7576d9d7a8fa8493e43de878fec184b02d97e3c4d1023b80c24b2bd7343fcd35"
+    },
+    {
+      "path": "Chispa/suspiro_05.jpeg",
+      "size_bytes": 39358,
+      "sha256": "22426531eea84787ba751c2d25d83ed5e85573c9df2429e69fcfa3fa9a7e2e22"
+    },
+    {
+      "path": "Chispa/suspiro_06.jpeg",
+      "size_bytes": 64864,
+      "sha256": "316f7b74ca7c8c168d96c4b956affa448dd8d04fa4221e807bf7161221dd0100"
+    },
+    {
+      "path": "Chispa/suspiro_07.jpeg",
+      "size_bytes": 171457,
+      "sha256": "dd2bf25ac5d0995659bfc48294cb301765f9a231968f69de1444fb9be240aecc"
+    },
+    {
+      "path": "Chispa/suspiro_08.jpeg",
+      "size_bytes": 437080,
+      "sha256": "33c4f4d9315908e29c3486fc15804ed93b9c0198cb1f370d298cb7f37323e06a"
+    },
+    {
+      "path": "Chispa/suspiro_09.jpeg",
+      "size_bytes": 209165,
+      "sha256": "ea9d8f2f8da9313b5087158f97a000941cc7beb54ffdcd3950367d48ab9335f8"
+    },
+    {
+      "path": "Chispa/suspiro_10.jpeg",
+      "size_bytes": 77230,
+      "sha256": "ed3eb27a0570bd34c607b9a6acb29c3987d369a7d50160bbe57b74b07daed55b"
+    },
+    {
+      "path": "Chispa/Those_Eyes.mp3",
+      "size_bytes": 5283350,
+      "sha256": "ec66955e12eab80e9300d1455b4862b4828fcbf945860eb6ee738a539bd8e362"
+    },
+    {
+      "path": "Chispa/Yellow.mp3",
+      "size_bytes": 6535973,
+      "sha256": "e76380b4ed783edc1e4b915698960b47ccb148234382fe1dd2d9c398cc48b105"
+    }
+  ]
+}

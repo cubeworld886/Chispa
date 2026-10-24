@@ -15,3 +15,5 @@ From the repository root, restore the 75-file local worktree with:
 ```
 
 The script verifies SHA-256 and size before and after copying, and refuses a non-empty destination. The snapshot `.gitattributes` disables line-ending conversion for overlay files.
+
+Historical package archive: `archive-original/Chispa.zip` is the exact original distribution ZIP, SHA-256 verified, with a separate member manifest. It is a distinct variant: 61 files and 15 directory entries; 41 files match the current snapshot, 19 differ, 15 current files are absent, and it adds `assets/cosmic/cosmic-event.wav`. CRC passed; no Yuli name/text hit, risky filename, or credential-pattern hit was found.
