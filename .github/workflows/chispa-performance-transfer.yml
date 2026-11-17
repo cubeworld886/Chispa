@@ -1,0 +1,101 @@
+name: Chispa isolated performance verification
+on:
+  push:
+    branches: [perf/chispa-render-2026-11-16]
+    paths: [.github/chispa-performance-transfer.json.xz]
+permissions:
+  contents: write
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/perf/chispa-render-2026-11-16'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Materialize the previously tested source tree
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, lzma, pathlib, subprocess
+          root = pathlib.Path.cwd()
+          payload = lzma.decompress((root / '.github/chispa-performance-transfer.json.xz').read_bytes())
+          assert hashlib.sha256(payload).hexdigest() == '6d4e0617f9a2bc066fd52129edd45a1266a117e006374e79d7f6a443304d5cef'
+          changes = json.loads(payload)
+          assert len(changes) == 26
+          for change in changes:
+              path = (root / change['path']).resolve()
+              assert path.is_relative_to(root) and '.git' not in path.relative_to(root).parts
+              old = path.read_text() if path.exists() else ''
+              assert hashlib.sha256(old.encode()).hexdigest() == change['before'], change['path']
+              lines = old.splitlines(keepends=True)
+              for start, end, text in reversed(change['edits']):
+                  assert 0 <= start <= end <= len(lines)
+                  lines[start:end] = [text]
+              new = ''.join(lines)
+              assert hashlib.sha256(new.encode()).hexdigest() == change['after'], change['path']
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_text(new)
+          (root / '.git/chispa-transfer-manifest.json').write_text(payload.decode())
+          (root / '.github/chispa-performance-transfer.json.xz').unlink()
+          (root / '.github/workflows/chispa-performance-transfer.yml').unlink()
+          subprocess.run(['git', 'add', '-A'], check=True)
+          tree = subprocess.check_output(['git', 'write-tree'], text=True).strip()
+          assert tree == 'fe3d3094825a6edb391b48cef7198b6a65753689', tree
+          print('VERIFIED_SOURCE_TREE=' + tree)
+          PY
+      - name: Run complete regression suite and syntax checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test cosmic/test/*.test.mjs lavender-runtime/test/*.test.mjs | tee /tmp/chispa-tests.log
+          find cosmic lavender-runtime/dist -name '*.js' -print0 | xargs -0 -n 1 node --check
+          node --check script.js
+          git diff --cached --check
+      - name: Upload verified Git tree without moving any branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, urllib.request
+          root = pathlib.Path.cwd()
+          changes = json.loads((root / '.git/chispa-transfer-manifest.json').read_text())
+          data = {'base_tree': '851fa49bbe2fc724e28c768a667270f86159cb7b', 'tree': [
+              {'path': item['path'], 'mode': '100644', 'type': 'blob', 'content': (root / item['path']).read_text()}
+              for item in changes
+          ]}
+          request = urllib.request.Request('https://api.github.com/repos/cubeworld886/Chispa/git/trees',
+              data=json.dumps(data).encode(), method='POST', headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+              })
+          with urllib.request.urlopen(request, timeout=60) as response:
+              result = json.load(response)
+          assert result['sha'] == 'fe3d3094825a6edb391b48cef7198b6a65753689', result['sha']
+          print('UPLOADED_VERIFIED_TREE=' + result['sha'])
+          PY
+      - name: Package only changed files and verification evidence
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib, shutil
+          root = pathlib.Path.cwd()
+          target = pathlib.Path('/tmp/chispa-verified-changes')
+          target.mkdir()
+          for item in json.loads((root / '.git/chispa-transfer-manifest.json').read_text()):
+              dest = target / item['path']
+              dest.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(root / item['path'], dest)
+          shutil.copyfile('/tmp/chispa-tests.log', target / 'remote-tests.log')
+          (target / 'verified-tree.txt').write_text('fe3d3094825a6edb391b48cef7198b6a65753689\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chispa-verified-performance-changes
+          path: /tmp/chispa-verified-changes
+          include-hidden-files: true
+          retention-days: 3
