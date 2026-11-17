@@ -187,11 +187,13 @@ function createScene(query = '?previewNarrative=1', { width = 390, audioEnabled 
   };
 }
 
-test('ordinary Chispa visits are unaffected by the opt-in dialogue', () => {
+test('ordinary visits install the published automatic narrative and wait for the finale', () => {
   const scene = createScene('');
   assert.equal(scene.document.body.children.length, 0);
-  assert.equal(scene.document.head.children.length, 0);
-  assert.equal(scene.window.__chispaNarrativePreview, undefined);
+  assert.equal(scene.document.head.children.length, 1);
+  assert.equal(scene.window.__chispaNarrativePreview.getStatus().state, 'waiting-for-cosmic-idle');
+  scene.enterIdle();
+  assert.equal(scene.window.__chispaNarrativePreview.getStatus().state, 'running');
 });
 
 test('the narrative waits for the original constellation finale and starts without interaction', () => {
@@ -266,4 +268,21 @@ test('dialogue retains the agreed wording with no synthetic voice', () => {
   assert.doesNotMatch(script, /hay algo profundamente triste en pensar eso/i);
   assert.doesNotMatch(script, /hay otra canción que también me recuerda a ti/i);
   assert.match(script, /setState\?\.\(state\)/);
+});
+
+test('a persisted pagehide preserves the current bubble and resumes after bfcache restoration', () => {
+  const scene = createScene(); scene.enterIdle(); scene.next(); scene.next();
+  const status = () => scene.window.__chispaNarrativePreview.getStatus();
+  const index = status().index;
+  scene.document.hidden = true;
+  scene.listeners.get('doc:visibilitychange')();
+  scene.listeners.get('win:pagehide')({ persisted: true });
+  assert.equal(status().state, 'running');
+  scene.document.hidden = false;
+  scene.listeners.get('win:pageshow')({ persisted: true });
+  assert.equal(status().index, index);
+  assert.equal(scene.next(), true);
+  assert.equal(status().state, 'running');
+  scene.listeners.get('win:pagehide')({ persisted: false });
+  assert.equal(status().state, 'disposed');
 });

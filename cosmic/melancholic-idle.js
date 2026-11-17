@@ -1,4 +1,5 @@
 function browserScheduler() {
+  if (globalThis.chispaFrames) return globalThis.chispaFrames;
   return {
     setTimeout: (fn, ms) => globalThis.setTimeout(fn, ms),
     clearTimeout: (id) => globalThis.clearTimeout(id),
@@ -106,6 +107,9 @@ export class MelancholicIdleDirector {
     this.travel.x += (target.x - this.travel.x) * alpha;
     this.travel.y += (target.y - this.travel.y) * alpha;
     this.actor.applyIdleDrift?.(this.travel.x, this.travel.y);
-    this.rafId = this.scheduler.requestAnimationFrame((nextTime) => this.#drift(nextTime));
+    const fps = Math.max(1, Math.min(30, this.actor.engine?.performance?.maxFps ?? 30));
+    this.rafId = this.scheduler.requestAnimationFrame((nextTime) => this.#drift(nextTime), {
+      at: now + 1000 / fps, label: 'idle-drift', priority: 10,
+    });
   }
 }

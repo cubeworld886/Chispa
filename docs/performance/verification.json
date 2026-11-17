@@ -1,0 +1,166 @@
+{
+  "baseline_commit": "fe52c2943c78d0aa006fede378c9f5270e91b55c",
+  "node_tests": {
+    "passed": 75,
+    "failed": 0,
+    "baseline_passed": 48,
+    "baseline_failed": 2
+  },
+  "identity": {
+    "poses": 56,
+    "exact_matches": 56,
+    "differences": [],
+    "canonical_svg_sha256": "4ceab2b7bd79febcd1a0bd321b41013671ff18cf26658d89228dbb00e2b1734a"
+  },
+  "methodology": "Local instrumented Chromium 144.0.7559.96 with SwiftShader; mobile viewport emulation, not physical-device FPS. Count averages in complete bins 7,8,9,10 after Enter.",
+  "runs": {
+    "mobile_before": {
+      "render_calls_per_second": 89.75,
+      "svg_attribute_writes_per_second": 16575.75,
+      "inherited_shard_animations": 63,
+      "page_errors": [],
+      "heavy_webgl_canvases_after_intro": 0,
+      "narrative_state": "running",
+      "bins_7_to_10": [
+        {
+          "attributes": 16770,
+          "unchanged": 12634,
+          "nativeCallbacks": 180,
+          "renders": 90,
+          "forced": 60
+        },
+        {
+          "nativeCallbacks": 180,
+          "renders": 90,
+          "attributes": 16956,
+          "unchanged": 12754,
+          "forced": 60
+        },
+        {
+          "nativeCallbacks": 177,
+          "renders": 89,
+          "attributes": 16707,
+          "unchanged": 12727,
+          "forced": 59
+        },
+        {
+          "nativeCallbacks": 180,
+          "renders": 90,
+          "attributes": 15870,
+          "unchanged": 12870,
+          "forced": 60
+        }
+      ],
+      "raster_scale": null
+    },
+    "mobile_after": {
+      "render_calls_per_second": 30.0,
+      "svg_attribute_writes_per_second": 1661.0,
+      "inherited_shard_animations": 0,
+      "page_errors": [],
+      "heavy_webgl_canvases_after_intro": 0,
+      "narrative_state": "running",
+      "bins_7_to_10": [
+        {
+          "nativeCallbacks": 59,
+          "renders": 30,
+          "attributes": 1800,
+          "unchanged": 120
+        },
+        {
+          "nativeCallbacks": 60,
+          "renders": 30,
+          "attributes": 1724,
+          "unchanged": 120
+        },
+        {
+          "nativeCallbacks": 60,
+          "renders": 30,
+          "attributes": 1680,
+          "unchanged": 120
+        },
+        {
+          "nativeCallbacks": 58,
+          "renders": 30,
+          "attributes": 1440,
+          "unchanged": 120
+        }
+      ],
+      "raster_scale": 1
+    },
+    "desktop_before": {
+      "render_calls_per_second": 118.5,
+      "svg_attribute_writes_per_second": 21886.5,
+      "inherited_shard_animations": 63,
+      "page_errors": [],
+      "heavy_webgl_canvases_after_intro": 0,
+      "narrative_state": "running",
+      "bins_7_to_10": [
+        {
+          "nativeCallbacks": 180,
+          "renders": 120,
+          "attributes": 22338,
+          "unchanged": 16680,
+          "forced": 60
+        },
+        {
+          "nativeCallbacks": 171,
+          "renders": 114,
+          "attributes": 21288,
+          "unchanged": 16150,
+          "forced": 57
+        },
+        {
+          "nativeCallbacks": 180,
+          "renders": 120,
+          "attributes": 22608,
+          "unchanged": 17160,
+          "forced": 60
+        },
+        {
+          "nativeCallbacks": 180,
+          "renders": 120,
+          "attributes": 21312,
+          "unchanged": 17160,
+          "forced": 60
+        }
+      ],
+      "raster_scale": null
+    },
+    "desktop_after": {
+      "render_calls_per_second": 59.5,
+      "svg_attribute_writes_per_second": 3245.0,
+      "inherited_shard_animations": 0,
+      "page_errors": [],
+      "heavy_webgl_canvases_after_intro": 0,
+      "narrative_state": "running",
+      "bins_7_to_10": [
+        {
+          "nativeCallbacks": 59,
+          "renders": 59,
+          "attributes": 3540,
+          "unchanged": 236
+        },
+        {
+          "nativeCallbacks": 60,
+          "renders": 60,
+          "attributes": 3448,
+          "unchanged": 240
+        },
+        {
+          "nativeCallbacks": 60,
+          "renders": 60,
+          "attributes": 3312,
+          "unchanged": 240
+        },
+        {
+          "nativeCallbacks": 59,
+          "renders": 59,
+          "attributes": 2680,
+          "unchanged": 236
+        }
+      ],
+      "raster_scale": 1
+    }
+  }
+}

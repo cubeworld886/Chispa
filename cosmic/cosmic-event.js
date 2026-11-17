@@ -3,6 +3,7 @@ import { completedProgressFor, COSMIC_PHASES, EXPLOSION_IMPACT_SECONDS, IDLE_SEC
 export const COSMIC_STATE_KEY = 'chispa_cosmic_event_v1';
 
 function defaultScheduler() {
+  if (globalThis.chispaFrames) return globalThis.chispaFrames;
   return {
     requestAnimationFrame: (fn) => globalThis.requestAnimationFrame(fn),
     cancelAnimationFrame: (id) => globalThis.cancelAnimationFrame(id),
@@ -166,6 +167,7 @@ export class CosmicEventController {
     this.musicGesturePromise = null;
     this.lastRealizationBeat = -1;
     this.heavyVfxReleased = false;
+    this.lastLavenderRevealProgress = null;
   }
 
   async preload({ onProgress = () => {} } = {}) {
@@ -372,7 +374,7 @@ export class CosmicEventController {
         return;
       }
       if (this.state === 'running') this.#queueFrame();
-    });
+    }, { label: 'cinematic', priority: 0 });
   }
 
   sample(seconds) {
@@ -437,9 +439,10 @@ export class CosmicEventController {
           this.lavender.revealCentered();
           this.lamentStarted = true;
         }
-      } else {
+      } else if (lavenderRevealProgress !== this.lastLavenderRevealProgress) {
         this.lavender?.setRevealProgress?.(lavenderRevealProgress);
       }
+      this.lastLavenderRevealProgress = lavenderRevealProgress;
     }
 
     if (!this.lamentStarted && seconds >= LAVENDER_REVEAL_SECONDS) {
@@ -539,27 +542,28 @@ export function createDomCosmicSceneView({ layer, world, vfxHost, quality = {} }
     layer.style.setProperty('--cosmic-origin-y', `${point.y}px`);
   };
 
+  const assign = (target, key, value) => { if (target[key] !== value) target[key] = value; };
   const renderFrame = ({ phase, progress, elapsed, windows }) => {
-    layer.dataset.phase = phase;
-    if (veil) veil.dataset.phase = phase;
+    assign(layer.dataset, 'phase', phase);
+    if (veil) assign(veil.dataset, 'phase', phase);
     const state = deriveCinematicViewState({ windows, elapsed, quality: { ...quality, flashScale, shakeScale } });
 
     if (flash) {
-      flash.style.opacity = String(state.flashOpacity);
-      flash.dataset.kind = state.flashKind;
+      assign(flash.style, 'opacity', String(state.flashOpacity));
+      assign(flash.dataset, 'kind', state.flashKind);
     }
-    if (veil) veil.style.opacity = String(state.veilOpacity);
+    if (veil) assign(veil.style, 'opacity', String(state.veilOpacity));
 
     const transform = state.shakeAmplitudePx > 0.025
       ? `translate3d(${state.x}px,${state.y}px,0)`
       : '';
     if (world) {
-      world.style.transform = transform;
-      world.style.filter = state.exposure > 1.001
+      assign(world.style, 'transform', transform);
+      assign(world.style, 'filter', state.exposure > 1.001
         ? `brightness(${state.exposure}) saturate(${1 + (state.exposure - 1) * 0.8})`
-        : '';
+        : '');
     }
-    if (vfxHost) vfxHost.style.transform = transform;
+    if (vfxHost) assign(vfxHost.style, 'transform', transform);
   };
 
   return {

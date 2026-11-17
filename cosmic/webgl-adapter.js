@@ -326,6 +326,12 @@ function safeDelete(gl, kind, resource) {
   try { gl[kind]?.(resource); } catch {}
 }
 
+export function resolveRasterDpr(quality = {}, scale = 1) {
+  const base = Math.max(1, Math.min(Number(quality.dpr) || 1, Number(quality.maxDpr) || 1.5));
+  const adaptive = Number.isFinite(scale) ? Math.max(.7, Math.min(1, scale)) : 1;
+  return base * adaptive;
+}
+
 export async function createNativeWebglBackend({ container, quality, onContextLost }) {
   const doc = container?.ownerDocument ?? globalThis.document;
   const canvas = doc?.createElement?.('canvas');
@@ -341,7 +347,7 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
     stencil: false,
     premultipliedAlpha: false,
     preserveDrawingBuffer: false,
-    powerPreference: 'high-performance',
+    powerPreference: quality?.name === 'LITE' ? 'low-power' : 'default',
   });
   if (!gl) {
     canvas.remove();
@@ -413,7 +419,7 @@ export async function createNativeWebglBackend({ container, quality, onContextLo
     if (disposed || contextWasLost) return;
     const width = measuredCssWidth || 1;
     const height = measuredCssHeight || 1;
-    const dpr = Math.max(1, Math.min(Number(quality?.dpr) || 1, Number(quality?.maxDpr) || 1.5));
+    const dpr = resolveRasterDpr(quality, globalThis.chispaFrames?.qualityScale ?? 1);
     const nextBufferWidth = Math.max(1, Math.round(width * dpr));
     const nextBufferHeight = Math.max(1, Math.round(height * dpr));
     if (!sizeDirty && width === cssWidth && height === cssHeight && nextBufferWidth === bufferWidth && nextBufferHeight === bufferHeight) return;

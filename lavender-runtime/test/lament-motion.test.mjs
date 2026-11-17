@@ -37,8 +37,10 @@ test('lament breath changes the body contour with a restrained horizontal counte
   const inhale = lamentPose(1.5, 1.5);
   const exhale = lamentPose(4.5, 4.5);
 
-  assert.ok(inhale.bodyScaleY > 1.006);
-  assert.ok(exhale.bodyScaleY < 0.997);
+  // The published posture is slightly compressed; breathing must expand
+  // relative to its exhale, not exceed an obsolete absolute height.
+  assert.ok(inhale.bodyScaleY > exhale.bodyScaleY + 0.01);
+  assert.ok(inhale.bodyScaleY < 1.02 && exhale.bodyScaleY > 0.97);
   assert.ok(Math.abs(inhale.bodyScaleX - 1) < 0.008);
   assert.ok(inhale.bodyPuff > exhale.bodyPuff + 0.025);
   assert.notEqual(inhale.bodyWavePhase, exhale.bodyWavePhase);

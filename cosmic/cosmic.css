@@ -198,3 +198,14 @@
     will-change: auto;
   }
 }
+
+/* Shards are clipped snapshots, not nine independently twinkling constellations.
+   Keep their static glow and their JS-driven motion; stop inherited CSS clocks. */
+#constellation [data-cosmic-shard] *,
+#constellation defs .star {
+  animation: none !important;
+  transition: none !important;
+}
+#constellation [data-cosmic-shard] .star {
+  filter: drop-shadow(0 0 5px #00ffff);
+}

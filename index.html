@@ -25,7 +25,7 @@
     }
   </style>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="cosmic/cosmic.css?prepdiag=20260928n">
+  <link rel="stylesheet" href="cosmic/cosmic.css?prepdiag=20261116perf">
 </head>
 <body>
 
@@ -872,10 +872,11 @@
 <audio id="deneb-player" src="Apocalypse.mp3" preload="metadata"></audio>
 
 
-<script src="script.js"></script>
-<!-- Opt-in only: ?previewNarrative=1, canonical Lavender remains unchanged. -->
-<script src="cosmic/narrative-preview.js" defer></script>
-<script type="module" src="cosmic/bootstrap.js?prepdiag=20260928p"></script>
+<script src="cosmic/render-coordinator.js?perf=20261116"></script>
+<script src="script.js?perf=20261116"></script>
+<!-- Published narrative; canonical Lavender assets and motion remain unchanged. -->
+<script src="cosmic/narrative-preview.js?perf=20261116" defer></script>
+<script type="module" src="cosmic/bootstrap.js?prepdiag=20261116perf"></script>
 </body>
 </html>
 

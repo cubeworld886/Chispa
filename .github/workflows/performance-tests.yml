@@ -1,0 +1,27 @@
+name: Chispa performance regression tests
+on:
+  push:
+    branches: [perf/chispa-render-2026-11-16]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all scene and actor tests
+        run: node --test cosmic/test/*.test.mjs lavender-runtime/test/*.test.mjs
+      - name: Check JavaScript syntax and whitespace
+        run: |
+          find cosmic lavender-runtime/dist -name '*.js' -print0 | xargs -0 -n 1 node --check
+          node --check script.js
+          git diff --check HEAD^ HEAD

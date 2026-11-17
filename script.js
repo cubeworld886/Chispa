@@ -855,6 +855,22 @@ document.querySelectorAll(".close-info").forEach(btn => {
   let rafId = null;
   let meteorTimer = null;
   let canvasInitialized = false;
+  let nextDrawAt = 0;
+  let cssWidth = 0;
+  let cssHeight = 0;
+  const frameScheduler = window.chispaFrames || {
+    requestAnimationFrame: (fn) => requestAnimationFrame(fn),
+    cancelAnimationFrame: (id) => cancelAnimationFrame(id),
+  };
+  const skyVisible = () => {
+    const loader = document.getElementById("cosmic-loader");
+    return !document.hidden && (!loader || loader.dataset.state === "started");
+  };
+  const requestSkyFrame = (at) => frameScheduler.requestAnimationFrame(tick, {
+    at, label: 'sky', priority: 40,
+  });
+  window.addEventListener("chispa:scene-state", () => skyVisible() ? start() : stop());
+  window.addEventListener("chispa:quality-change", () => resizeCanvas());
   // After the cinematic, the constellation is a backdrop to Lavender's letter.
   // Redraw the original stars and meteors less frequently instead of doing
   // 60 full-screen canvas clears per second for several minutes.
@@ -867,11 +883,12 @@ document.querySelectorAll(".close-info").forEach(btn => {
     narrativeIdle = true;
     last = 0;
     lastDrawAt = 0;
+    nextDrawAt = 0;
   }, { once: true });
 
   function getDpr() {
     const cap = lowPowerMode ? 1.5 : 2;
-    return Math.min(window.devicePixelRatio || 1, cap);
+    return Math.min(window.devicePixelRatio || 1, cap) * (window.chispaFrames?.qualityScale || 1);
   }
 
   function ensureCanvas() {
@@ -893,7 +910,9 @@ document.querySelectorAll(".close-info").forEach(btn => {
     canvas.style.height = cssH + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    createStars();
+    if (!starsArray.length || cssWidth !== cssW || cssHeight !== cssH) createStars();
+    cssWidth = cssW;
+    cssHeight = cssH;
   }
 
   function createStars() {
@@ -1064,11 +1083,14 @@ document.querySelectorAll(".close-info").forEach(btn => {
   let last = 0;
   let lastDrawAt = 0;
   function tick(now) {
-    rafId = requestAnimationFrame(tick);
-    if (document.hidden) return;
+    rafId = null;
+    if (!skyVisible()) return;
     const fps = narrativeIdle ? NARRATIVE_SKY_FPS : MAX_SKY_FPS;
     const frameMs = 1000 / fps;
-    if (lastDrawAt && now - lastDrawAt < frameMs * 0.92) return;
+    if (nextDrawAt && now + .5 < nextDrawAt) {
+      rafId = requestSkyFrame(nextDrawAt);
+      return;
+    }
 
     const dt = Math.min(125, now - last || frameMs);
     last = now;
@@ -1079,19 +1101,24 @@ document.querySelectorAll(".close-info").forEach(btn => {
 
     drawBackgroundStars(dtFactor);
     drawMeteors(dtFactor);
+    // Preserve elapsed-time motion and phase-align a non-divisor cadence (24 FPS).
+    nextDrawAt = nextDrawAt && now - nextDrawAt < frameMs
+      ? nextDrawAt + frameMs : now + frameMs;
+    rafId = requestSkyFrame(nextDrawAt);
   }
 
   function start() {
-    if (!canvas || !ctx) return;
+    if (!canvas || !ctx || !skyVisible()) return;
     last = 0;
     lastDrawAt = 0;
-    if (rafId === null) rafId = requestAnimationFrame(tick);
+    nextDrawAt = 0;
+    if (rafId === null) rafId = requestSkyFrame();
     scheduleNextMeteor();
   }
 
   function stop() {
     if (rafId !== null) {
-      cancelAnimationFrame(rafId);
+      frameScheduler.cancelAnimationFrame(rafId);
       rafId = null;
     }
     if (meteorTimer) {

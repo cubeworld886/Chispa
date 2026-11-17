@@ -1,3 +1,4 @@
+import { setSvgAttribute, removeSvgAttribute, SvgPathCache } from '../performance/svgCommit.js';
 import { crescentPath, orbitCenter, orbitRotationDeg, orbitRx, orbitRy, star0Center, star0Inner, star0Outer, star1Center, star1Inner, star1Outer, star2Center, star2Inner, star2Outer } from '../geometry/lavenderGeometry.js';
 import { POS_FRONT_BODY, POS_TAKEOFF_BODY, POS_ANTICIPATION_BODY, POS_BRAKE_BODY, POS_LAND_BODY, POS_SQUASH_BODY, POS_BOUNCE_BODY, POS_SETTLE_BODY, POS_FRONT_EYES, POS_TAKEOFF_EYES, POS_ANTICIPATION_EYES, POS_BRAKE_EYES, POS_LAND_EYES, POS_SQUASH_EYES, POS_BOUNCE_EYES, POS_SETTLE_EYES, POS_FRONT_SEAM, POS_FRONT_PETAL, POS_BRAKE_SEAM, POS_BRAKE_PETAL, POS_LAND_SEAM, POS_LAND_PETAL, POS_SQUASH_SEAM, POS_SQUASH_PETAL, POS_BOUNCE_SEAM, POS_BOUNCE_PETAL, POS_SETTLE_SEAM, POS_SETTLE_PETAL, POS_IDENTITY_MATRIX, POS_TAKEOFF_MATRIX, POS_ANTICIPATION_MATRIX, POS_BRAKE_MATRIX, POS_LAND_MATRIX, POS_SQUASH_MATRIX, POS_BOUNCE_MATRIX, POS_SETTLE_MATRIX, WEB_PROFILE_BODY, WEB_PROFILE_ACCEL_BODY, WEB_ARC_BODY, WEB_HERO_APPROACH_BODY, WEB_PROFILE_EYE, WEB_PROFILE_ACCEL_EYE, WEB_ARC_EYE, WEB_HERO_APPROACH_EYE } from '../geometry/posWebIdentity.js';
 import { lavenderMaterialManifest } from '../materials/materialManifest.js';
@@ -205,8 +206,15 @@ export class LavenderSvgEngine {
     performance;
     lastRenderedAt = 0;
     lastStoryboardVfxAt = 0;
+    pathCache = new SvgPathCache();
+    scheduler;
+    paused = false;
     constructor(host, options = {}) {
         this.host = host;
+        this.scheduler = options.scheduler ?? globalThis.chispaFrames ?? {
+            requestAnimationFrame: (fn) => globalThis.requestAnimationFrame(fn),
+            cancelAnimationFrame: (id) => globalThis.cancelAnimationFrame(id),
+        };
         this.reduced = options.reducedMotion ?? matchMedia('(prefers-reduced-motion:reduce)').matches;
         this.performance = resolveLavenderPerformance(options.quality ?? 'auto');
         this.quality = this.performance.quality;
@@ -214,14 +222,15 @@ export class LavenderSvgEngine {
     async init() { this.build(); this.syncHostSize(); if ('ResizeObserver' in window) {
         this.hostResizeObserver = new ResizeObserver(() => this.syncHostSize());
         this.hostResizeObserver.observe(this.host);
-    } this.forceVisibleFrame(); this.raf = requestAnimationFrame(this.tick); }
-    pauseAnimation() { if (this.raf) {
-        cancelAnimationFrame(this.raf);
+    } this.forceVisibleFrame(); this.raf = (this.scheduler ?? globalThis).requestAnimationFrame(this.tick, { label: 'lavender', priority: 20 }); }
+    pauseAnimation() { this.paused = true; if (this.raf) {
+        (this.scheduler ?? globalThis).cancelAnimationFrame(this.raf);
         this.raf = 0;
     } }
     resumeAnimation() { if (this.destroyed || this.raf)
         return;
-        this.raf = requestAnimationFrame(this.tick);
+        this.paused = false;
+        this.raf = (this.scheduler ?? globalThis).requestAnimationFrame(this.tick, { label: 'lavender', priority: 20 });
     }
     getState() { return this.state; }
     getQuality() { return this.quality; }
@@ -268,8 +277,8 @@ export class LavenderSvgEngine {
         return; this.transitionFrom = this.lastPose; this.transitionStarted = performance.now(); this.state = next; this.stateStarted = performance.now(); }
     syncHostSize = () => { if (this.destroyed)
         return; const w = Math.max(1, this.host.clientWidth), h = Math.max(1, this.host.clientHeight); this.hostWidth = w; this.hostHeight = h; this.svg?.setAttribute('viewBox', `0 0 ${w} ${h}`); this.svg?.setAttribute('width', String(w)); this.svg?.setAttribute('height', String(h)); this.layout(); };
-    destroy() { this.destroyed = true; if (this.raf)
-        cancelAnimationFrame(this.raf); this.hostResizeObserver?.disconnect(); this.hostResizeObserver = undefined; removeEventListener('resize', this.syncHostSize); this.svg?.remove(); }
+    destroy() { this.destroyed = true; this.pathCache.clear(); if (this.raf)
+        (this.scheduler ?? globalThis).cancelAnimationFrame(this.raf); this.hostResizeObserver?.disconnect(); this.hostResizeObserver = undefined; removeEventListener('resize', this.syncHostSize); this.svg?.remove(); }
     build() {
         this.host.replaceChildren();
         this.host.style.background = 'transparent';
@@ -445,8 +454,8 @@ export class LavenderSvgEngine {
         this.lastLayoutAnchorY = v.anchorY;
         this.lastLayoutAlpha = v.alpha;
         const side = Math.min(w, h), size = side * Math.max(.01, v.scale), left = w * v.centerX - v.anchorX * size, top = h * v.centerY - v.anchorY * size;
-        this.actor.setAttribute('transform', `translate(${left} ${top}) scale(${size / 1000})`);
-        this.actor.setAttribute('opacity', String(clamp(v.alpha)));
+        setSvgAttribute(this.actor, 'transform', `translate(${left} ${top}) scale(${size / 1000})`);
+        setSvgAttribute(this.actor, 'opacity', String(clamp(v.alpha)));
         const companion = this.host.closest('.lavender-companion');
         if (companion) {
             const hit = Math.max(76, size * .58), cx = left + size * .5, cy = top + size * .52;
@@ -597,9 +606,9 @@ export class LavenderSvgEngine {
         this.lastShapeDriver = driver;
         return { shape, paths, dirty: true };
     } return { shape: this.cachedShape, paths: this.cachedShapePaths, dirty: false }; }
-    tick = (now) => { if (this.destroyed)
+    tick = (now) => { this.raf = 0; if (this.destroyed || this.paused)
         return; const frameBudget = 1000 / Math.max(1, this.performance.maxFps); if (this.lastRenderedAt && now - this.lastRenderedAt < frameBudget * .90) {
-        this.raf = requestAnimationFrame(this.tick);
+        this.raf = (this.scheduler ?? globalThis).requestAnimationFrame(this.tick, { at: this.lastRenderedAt + frameBudget * .90, label: 'lavender', priority: 20 });
         return;
     } const dt = Math.min(.05, Math.max(.001, (now - (this._lastTick ?? now - frameBudget)) / 1000)); this._lastTick = now; this.lastRenderedAt = now; if (this.reduced) {
         this.gazeX = this.targetGazeX;
@@ -627,7 +636,7 @@ export class LavenderSvgEngine {
         const f = 1 - Math.exp(-dt * 11);
         for (const k of Object.keys(this.travel))
             this.travel[k] += (this.targetTravel[k] - this.travel[k]) * f;
-    } this.render(now); this.raf = requestAnimationFrame(this.tick); };
+    } this.render(now); this.raf = (this.scheduler ?? globalThis).requestAnimationFrame(this.tick, { at: now + frameBudget * .90, label: 'lavender', priority: 20 }); };
     render(now) {
         if (!this.svg)
             return;
@@ -659,13 +668,13 @@ export class LavenderSvgEngine {
         }
         const expressiveContour = this.cinematicPerformance && this.state === 'lament' && !storyboardLocked;
         const framePaths = expressiveContour ? {
-            bodyD: closedPath(deformCinematicContour(shape.body, p)),
-            petalD: closedPath(deformCinematicContour(shape.petal, p)),
-            seamD: openPath(deformCinematicContour(shape.seam, p)),
-            rimD: openPath(deformCinematicContour(shape.rim, p)),
-            underRimD: openPath(deformCinematicContour(shape.underRim, p)),
-            highlightD: closedPath(deformCinematicContour(shape.highlight, p)),
-            shadowD: closedPath(deformCinematicContour(shape.shadow, p)),
+            bodyD: this.pathCache.resolve('lament-body', deformCinematicContour(shape.body, p), closedPath),
+            petalD: this.pathCache.resolve('lament-petal', deformCinematicContour(shape.petal, p), closedPath),
+            seamD: this.pathCache.resolve('lament-seam', deformCinematicContour(shape.seam, p), openPath),
+            rimD: this.pathCache.resolve('lament-rim', deformCinematicContour(shape.rim, p), openPath),
+            underRimD: this.pathCache.resolve('lament-underRim', deformCinematicContour(shape.underRim, p), openPath),
+            highlightD: this.pathCache.resolve('lament-highlight', deformCinematicContour(shape.highlight, p), closedPath),
+            shadowD: this.pathCache.resolve('lament-shadow', deformCinematicContour(shape.shadow, p), closedPath),
         } : shapePaths;
         const bd = framePaths.bodyD, pd = framePaths.petalD, sd = framePaths.seamD, rd = framePaths.rimD, urd = framePaths.underRimD, hd = framePaths.highlightD, shd = framePaths.shadowD;
         const materialMode = `yaw:${shape.side}`, materialDriver = this.yaw, materialStep = this.quality === 'optimized' ? .050 : .024, materialDirty = this.lastMaterialMode !== materialMode || !Number.isFinite(this.lastMaterialDriver) || Math.abs(materialDriver - this.lastMaterialDriver) > materialStep;
@@ -675,49 +684,49 @@ export class LavenderSvgEngine {
             this.svg.style.setProperty('--lav-mat-center', String(shape.materialCenter));
             this.svg.style.setProperty('--lav-mat-mid', String(shape.materialMid));
             this.materialBlobs.forEach((c, i) => { const m = shape.material[i]; if (!m)
-                return; const g = this.materialGradients[i]; c.setAttribute('cx', String(m[0])); c.setAttribute('cy', String(m[1])); const mr = m[2] * shape.materialRadiusScale; c.setAttribute('r', String(mr)); if (g) {
-                g.setAttribute('cx', String(m[0]));
-                g.setAttribute('cy', String(m[1]));
-                g.setAttribute('r', String(mr));
-            } const col = `rgb(${m[3]} ${m[4]} ${m[5]})`; this.materialStops[i * 2]?.setAttribute('stop-color', col); this.materialStops[i * 2 + 1]?.setAttribute('stop-color', col); });
+                return; const g = this.materialGradients[i]; setSvgAttribute(c, 'cx', String(m[0])); setSvgAttribute(c, 'cy', String(m[1])); const mr = m[2] * shape.materialRadiusScale; setSvgAttribute(c, 'r', String(mr)); if (g) {
+                setSvgAttribute(g, 'cx', String(m[0]));
+                setSvgAttribute(g, 'cy', String(m[1]));
+                setSvgAttribute(g, 'r', String(mr));
+            } const col = `rgb(${m[3]} ${m[4]} ${m[5]})`; setSvgAttribute(this.materialStops[i * 2], 'stop-color', col); setSvgAttribute(this.materialStops[i * 2 + 1], 'stop-color', col); });
         }
         if (shapeDirty || expressiveContour) {
             for (const e of [this.bodyOuterGlowA, this.bodyOuterGlowB, this.bodyOuterGlowC, this.bodyGlow, this.bodyRimGlow, this.bodyPath, this.morphTint, this.bodyProfileTone, this.bodyHighlight, this.bodyMidGlow, this.bodyShadow, this.bodyEdge])
-                e.setAttribute('d', bd);
-            this.bodyOuterGlowA.setAttribute('opacity', String(clamp(shape.outerGlowStrength)));
-            this.bodyOuterGlowB.setAttribute('opacity', String(clamp(shape.outerGlowStrength - 1)));
+                setSvgAttribute(e, 'd', bd);
+            setSvgAttribute(this.bodyOuterGlowA, 'opacity', String(clamp(shape.outerGlowStrength)));
+            setSvgAttribute(this.bodyOuterGlowB, 'opacity', String(clamp(shape.outerGlowStrength - 1)));
             const outerC = clamp(shape.outerGlowStrength - 2);
-            this.bodyOuterGlowC.setAttribute('opacity', String(outerC));
+            setSvgAttribute(this.bodyOuterGlowC, 'opacity', String(outerC));
             this.bodyOuterGlowC.style.display = outerC > .001 ? '' : 'none';
-            this.bodyClipPath.setAttribute('d', bd);
+            setSvgAttribute(this.bodyClipPath, 'd', bd);
             const pm = shape.posMatrix, bodyMaterialMatrix = shape.side > 0 ? pm : [-pm[0], pm[1], -pm[2], pm[3], 1000 - pm[4], pm[5]];
-            this.posBodyImage.setAttribute('transform', `matrix(${bodyMaterialMatrix.join(' ')})`);
-            this.referenceShadow.setAttribute('d', shd);
-            this.referenceShadow.setAttribute('opacity', String(clamp(shape.shadowAlpha * (1 - shape.posBlend))));
-            this.referenceHighlight.setAttribute('d', hd);
-            this.referenceHighlight.setAttribute('opacity', String(clamp(shape.highlightAlpha * (1 - shape.posBlend))));
-            this.petal.setAttribute('d', pd);
-            this.seam.setAttribute('d', sd);
-            this.rim.setAttribute('d', rd);
-            this.underRim.setAttribute('d', urd);
+            setSvgAttribute(this.posBodyImage, 'transform', `matrix(${bodyMaterialMatrix.join(' ')})`);
+            setSvgAttribute(this.referenceShadow, 'd', shd);
+            setSvgAttribute(this.referenceShadow, 'opacity', String(clamp(shape.shadowAlpha * (1 - shape.posBlend))));
+            setSvgAttribute(this.referenceHighlight, 'd', hd);
+            setSvgAttribute(this.referenceHighlight, 'opacity', String(clamp(shape.highlightAlpha * (1 - shape.posBlend))));
+            setSvgAttribute(this.petal, 'd', pd);
+            setSvgAttribute(this.seam, 'd', sd);
+            setSvgAttribute(this.rim, 'd', rd);
+            setSvgAttribute(this.underRim, 'd', urd);
         }
         const bodyAlpha = this.cinematicLock ? this.bodyReveal : 1, posBlend = clamp(shape.posBlend), webBlend = 1 - posBlend, morphVisual = clamp(posMorph * posBlend);
-        this.bodyGroup.setAttribute('opacity', String(clamp(bodyAlpha)));
-        this.posBodyImage.setAttribute('opacity', String(clamp(posBlend * (1 - morphVisual) * bodyAlpha)));
-        this.morphTint.setAttribute('fill', mixHex('#7d48ed', color(p.accentColor), .82));
-        this.morphTint.setAttribute('opacity', String(clamp(morphVisual * .78 * bodyAlpha)));
-        this.materialCloud.setAttribute('opacity', String(clamp(.98 * webBlend)));
-        this.petal.setAttribute('opacity', String(clamp(shape.petalAlpha * bodyAlpha * .72 * webBlend)));
-        this.seam.setAttribute('opacity', String(clamp(shape.seamAlpha * bodyAlpha * .82 * webBlend)));
-        this.rim.setAttribute('opacity', String(clamp(shape.rimAlpha * bodyAlpha * .82)));
-        this.underRim.setAttribute('opacity', String(clamp(shape.underRimAlpha * bodyAlpha * .72)));
+        setSvgAttribute(this.bodyGroup, 'opacity', String(clamp(bodyAlpha)));
+        setSvgAttribute(this.posBodyImage, 'opacity', String(clamp(posBlend * (1 - morphVisual) * bodyAlpha)));
+        setSvgAttribute(this.morphTint, 'fill', mixHex('#7d48ed', color(p.accentColor), .82));
+        setSvgAttribute(this.morphTint, 'opacity', String(clamp(morphVisual * .78 * bodyAlpha)));
+        setSvgAttribute(this.materialCloud, 'opacity', String(clamp(.98 * webBlend)));
+        setSvgAttribute(this.petal, 'opacity', String(clamp(shape.petalAlpha * bodyAlpha * .72 * webBlend)));
+        setSvgAttribute(this.seam, 'opacity', String(clamp(shape.seamAlpha * bodyAlpha * .82 * webBlend)));
+        setSvgAttribute(this.rim, 'opacity', String(clamp(shape.rimAlpha * bodyAlpha * .82)));
+        setSvgAttribute(this.underRim, 'opacity', String(clamp(shape.underRimAlpha * bodyAlpha * .72)));
         // Keep the approved silhouette as authority. Lament breathing affects only the body contour;
         // the registered eyes follow a small fraction of that expansion to stay seated in the face.
         const cinematicStatic = this.cinematicLock && !this.cinematicPerformance && !storyboardLocked, breathing = this.cinematicPerformance && this.state === 'lament', bodyScaleX = breathing ? clamp(p.bodyScaleX, .982, 1.018) : 1, bodyScaleY = breathing ? clamp(p.bodyScaleY, .976, 1.020) : 1, eyeScaleX = 1 + (bodyScaleX - 1) * .28, eyeScaleY = 1 + (bodyScaleY - 1) * .32, roll = storyboardLocked || cinematicStatic ? 0 : clamp(p.bodyRotation + this.travel.roll + (this.cinematicPerformance ? this.headTurn * .14 : 0), -.060, .060), dx = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDx + this.gazeX * .002) * 1000, -7, 7), dy = storyboardLocked || cinematicStatic ? 0 : clamp((p.bodyDy - this.travel.lift * .055) * 1000, -11, 11);
         const bodyTransform = `translate(${500 + dx} ${515 + dy}) rotate(${roll * 57.2958}) scale(${bodyScaleX} ${bodyScaleY}) translate(-500 -515)`;
         const faceTransform = `translate(${500 + dx} ${515 + dy}) rotate(${roll * 57.2958}) scale(${eyeScaleX} ${eyeScaleY}) translate(-500 -515)`;
-        this.bodyGroup.setAttribute('transform', bodyTransform);
-        this.eyeRoot.setAttribute('transform', faceTransform);
+        setSvgAttribute(this.bodyGroup, 'transform', bodyTransform);
+        setSvgAttribute(this.eyeRoot, 'transform', faceTransform);
         const cinematicPoseLock = this.cinematicLock && !this.cinematicPerformance, revealEyes = this.cinematicLock ? this.cinematicEyeReveal : 1;
         const leftOpen = clamp((cinematicPoseLock ? this.cinematicLeft : p.leftEyeOpen) * shape.leftAlpha * revealEyes), rightOpen = clamp((cinematicPoseLock ? this.cinematicRight : p.rightEyeOpen) * shape.rightAlpha * revealEyes);
         const facePose = this.cinematicPerformance && !storyboardLocked ? [p.gazeX, p.gazeY, p.bodyTurn, p.bodyBend, p.bodyPuff, p.leftEyeScaleX, p.rightEyeScaleX, p.leftEyeRotation, p.rightEyeRotation, p.leftEyeSmile, p.rightEyeSmile, p.leftEyeDx, p.leftEyeDy, p.rightEyeDx, p.rightEyeDy] : null;
@@ -726,189 +735,189 @@ export class LavenderSvgEngine {
         const eyeGeometryDirty = shapeDirty || closeUp || this.lastCloseUp !== closeUp || facePoseChanged;
         let leftD = shapePaths.leftD, rightD = shapePaths.rightD, lc = shapePaths.leftCenter, rc = shapePaths.rightCenter;
         if (closeUp || facePose) {
-            leftD = closedPath(left);
-            rightD = closedPath(right);
+            leftD = this.pathCache.resolve('left-eye', left, closedPath);
+            rightD = this.pathCache.resolve('right-eye', right, closedPath);
             lc = centroid(left);
             rc = centroid(right);
         }
         if (eyeGeometryDirty) {
             for (const e of [this.leftEyeDark, this.leftEyeGlow, this.leftEye, this.leftEyeDepth, this.leftEyeSheen, this.leftEyeTint, this.leftEyeSocketGlow, this.leftEyeSocket])
-                e.setAttribute('d', leftD);
+                setSvgAttribute(e, 'd', leftD);
             for (const e of [this.rightEyeDark, this.rightEyeGlow, this.rightEye, this.rightEyeDepth, this.rightEyeSheen, this.rightEyeTint, this.rightEyeSocketGlow, this.rightEyeSocket])
-                e.setAttribute('d', rightD);
-            this.posLeftEyeClipPath.setAttribute('d', leftD);
-            this.posRightEyeClipPath.setAttribute('d', rightD); /* Legacy eye rasters remain deliberately dormant: vector eye geometry/material is the only live eye renderer. */
+                setSvgAttribute(e, 'd', rightD);
+            setSvgAttribute(this.posLeftEyeClipPath, 'd', leftD);
+            setSvgAttribute(this.posRightEyeClipPath, 'd', rightD); /* Legacy eye rasters remain deliberately dormant: vector eye geometry/material is the only live eye renderer. */
         }
         this.lastCloseUp = closeUp;
         const leftMaskDirty = eyeGeometryDirty || !Number.isFinite(this.lastLeftMaskOpen) || leftOpen !== this.lastLeftMaskOpen, rightMaskDirty = eyeGeometryDirty || !Number.isFinite(this.lastRightMaskOpen) || rightOpen !== this.lastRightMaskOpen;
         if (leftMaskDirty) {
-            const d = closedPath(aperture(left, leftOpen));
-            this.leftMaskPath.setAttribute('d', d);
-            this.leftEyeSocket.setAttribute('d', d);
-            this.leftEyeSocketGlow.setAttribute('d', d);
+            const d = this.pathCache.resolve('left-mask', aperture(left, leftOpen), closedPath);
+            setSvgAttribute(this.leftMaskPath, 'd', d);
+            setSvgAttribute(this.leftEyeSocket, 'd', d);
+            setSvgAttribute(this.leftEyeSocketGlow, 'd', d);
             this.lastLeftMaskOpen = leftOpen;
         }
         if (rightMaskDirty) {
-            const d = closedPath(aperture(right, rightOpen));
-            this.rightMaskPath.setAttribute('d', d);
-            this.rightEyeSocket.setAttribute('d', d);
-            this.rightEyeSocketGlow.setAttribute('d', d);
+            const d = this.pathCache.resolve('right-mask', aperture(right, rightOpen), closedPath);
+            setSvgAttribute(this.rightMaskPath, 'd', d);
+            setSvgAttribute(this.rightEyeSocket, 'd', d);
+            setSvgAttribute(this.rightEyeSocketGlow, 'd', d);
             this.lastRightMaskOpen = rightOpen;
         }
         // The eyelid, socket, and light stay registered to one contour. Cinematic gaze offsets move
         // that contour slightly inside the face; no eye layer drifts independently.
-        this.leftEyeGroup.removeAttribute('transform');
-        this.rightEyeGroup.removeAttribute('transform');
+        removeSvgAttribute(this.leftEyeGroup, 'transform');
+        removeSvgAttribute(this.rightEyeGroup, 'transform');
         const leftGroupVisibility = cinematicPoseLock ? (this.cinematicEyeIsolation === 'right' ? 0 : smooth(clamp(leftOpen / .10))) : 1, rightGroupVisibility = cinematicPoseLock ? (this.cinematicEyeIsolation === 'left' ? 0 : smooth(clamp(rightOpen / .10))) : 1;
-        this.leftEyeGroup.setAttribute('opacity', String(leftGroupVisibility));
-        this.rightEyeGroup.setAttribute('opacity', String(rightGroupVisibility));
+        setSvgAttribute(this.leftEyeGroup, 'opacity', String(leftGroupVisibility));
+        setSvgAttribute(this.rightEyeGroup, 'opacity', String(rightGroupVisibility));
         const eyeLight = storyboardLocked ? shape.eyeLight : 1, eyeWhite = clamp(eyeLight), eyeDark = clamp(1 - eyeLight * .85), eyeGlow = clamp((.76 + p.eyeGlow * .22) * eyeLight), eyeSocket = clamp(.30 + .18 * eyeLight), coreSx = 1, coreSy = 1, leftCore = `translate(${lc[0]} ${lc[1]}) scale(${coreSx} ${coreSy}) translate(${-lc[0]} ${-lc[1]})`, rightCore = `translate(${rc[0]} ${rc[1]}) scale(${coreSx} ${coreSy}) translate(${-rc[0]} ${-rc[1]})`;
-        this.leftEye.setAttribute('transform', leftCore);
-        this.rightEye.setAttribute('transform', rightCore);
-        this.leftEyeTint.setAttribute('transform', leftCore);
-        this.rightEyeTint.setAttribute('transform', rightCore);
-        this.posLeftEyeImage.setAttribute('opacity', '0');
-        this.posRightEyeImage.setAttribute('opacity', '0');
-        this.leftEye.setAttribute('fill', `url(#${this.uid}-${closeUp ? 'eyeCinematic' : 'eye'})`);
-        this.rightEye.setAttribute('fill', `url(#${this.uid}-${closeUp ? 'eyeCinematic' : 'eye'})`);
-        this.leftEyeGlow.setAttribute('filter', `url(#${this.uid}-${closeUp ? 'eyeGlowCinematic' : 'eyeGlow'})`);
-        this.rightEyeGlow.setAttribute('filter', `url(#${this.uid}-${closeUp ? 'eyeGlowCinematic' : 'eyeGlow'})`);
-        this.leftEye.setAttribute('opacity', String(eyeWhite));
-        this.rightEye.setAttribute('opacity', String(eyeWhite));
+        setSvgAttribute(this.leftEye, 'transform', leftCore);
+        setSvgAttribute(this.rightEye, 'transform', rightCore);
+        setSvgAttribute(this.leftEyeTint, 'transform', leftCore);
+        setSvgAttribute(this.rightEyeTint, 'transform', rightCore);
+        setSvgAttribute(this.posLeftEyeImage, 'opacity', '0');
+        setSvgAttribute(this.posRightEyeImage, 'opacity', '0');
+        setSvgAttribute(this.leftEye, 'fill', `url(#${this.uid}-${closeUp ? 'eyeCinematic' : 'eye'})`);
+        setSvgAttribute(this.rightEye, 'fill', `url(#${this.uid}-${closeUp ? 'eyeCinematic' : 'eye'})`);
+        setSvgAttribute(this.leftEyeGlow, 'filter', `url(#${this.uid}-${closeUp ? 'eyeGlowCinematic' : 'eyeGlow'})`);
+        setSvgAttribute(this.rightEyeGlow, 'filter', `url(#${this.uid}-${closeUp ? 'eyeGlowCinematic' : 'eyeGlow'})`);
+        setSvgAttribute(this.leftEye, 'opacity', String(eyeWhite));
+        setSvgAttribute(this.rightEye, 'opacity', String(eyeWhite));
         const focus = closeUp ? this.cinematicFocus : 0, thisDepth = clamp((closeUp ? .34 : .48) + focus * .12), thisSheen = clamp((closeUp ? .38 : .50) + focus * .22);
-        this.leftEyeDepth.setAttribute('opacity', String(thisDepth * eyeWhite));
-        this.rightEyeDepth.setAttribute('opacity', String(thisDepth * eyeWhite));
-        this.leftEyeSheen.setAttribute('opacity', String(thisSheen * eyeWhite));
-        this.rightEyeSheen.setAttribute('opacity', String(thisSheen * eyeWhite));
-        this.leftEyeTint.setAttribute('fill', shape.eyeTintColor);
-        this.rightEyeTint.setAttribute('fill', shape.eyeTintColor);
-        this.leftEyeTint.setAttribute('opacity', String(clamp(shape.eyeTint * eyeLight * webBlend * .62)));
-        this.rightEyeTint.setAttribute('opacity', String(clamp(shape.eyeTint * eyeLight * webBlend * .62)));
-        this.leftEyeDark.setAttribute('opacity', String(eyeDark * .62));
-        this.rightEyeDark.setAttribute('opacity', String(eyeDark * .62));
+        setSvgAttribute(this.leftEyeDepth, 'opacity', String(thisDepth * eyeWhite));
+        setSvgAttribute(this.rightEyeDepth, 'opacity', String(thisDepth * eyeWhite));
+        setSvgAttribute(this.leftEyeSheen, 'opacity', String(thisSheen * eyeWhite));
+        setSvgAttribute(this.rightEyeSheen, 'opacity', String(thisSheen * eyeWhite));
+        setSvgAttribute(this.leftEyeTint, 'fill', shape.eyeTintColor);
+        setSvgAttribute(this.rightEyeTint, 'fill', shape.eyeTintColor);
+        setSvgAttribute(this.leftEyeTint, 'opacity', String(clamp(shape.eyeTint * eyeLight * webBlend * .62)));
+        setSvgAttribute(this.rightEyeTint, 'opacity', String(clamp(shape.eyeTint * eyeLight * webBlend * .62)));
+        setSvgAttribute(this.leftEyeDark, 'opacity', String(eyeDark * .62));
+        setSvgAttribute(this.rightEyeDark, 'opacity', String(eyeDark * .62));
         const glowStrength = clamp(eyeGlow * (closeUp ? (.44 + focus * .14) : .58));
-        this.leftEyeGlow.setAttribute('opacity', String(glowStrength));
-        this.rightEyeGlow.setAttribute('opacity', String(glowStrength));
+        setSvgAttribute(this.leftEyeGlow, 'opacity', String(glowStrength));
+        setSvgAttribute(this.rightEyeGlow, 'opacity', String(glowStrength));
         const socketColor = mixHex('#7652df', shape.eyeSocketColor, webBlend), socketAlpha = clamp(eyeSocket * (.24 + .76 * Math.sqrt(leftOpen))), rightSocketAlpha = clamp(eyeSocket * (.24 + .76 * Math.sqrt(rightOpen))), socketWidth = closeUp ? 2.65 : lerp(2.05, 2.75, shape.profile), socketGlowWidth = closeUp ? 6.2 : lerp(4.8, 6.2, shape.profile);
-        this.leftEyeSocket.setAttribute('stroke', socketColor);
-        this.rightEyeSocket.setAttribute('stroke', socketColor);
-        this.leftEyeSocketGlow.setAttribute('stroke', mixHex('#b88bff', socketColor, .36));
-        this.rightEyeSocketGlow.setAttribute('stroke', mixHex('#b88bff', socketColor, .36));
-        this.leftEyeSocket.setAttribute('stroke-width', String(socketWidth));
-        this.rightEyeSocket.setAttribute('stroke-width', String(socketWidth));
-        this.leftEyeSocketGlow.setAttribute('stroke-width', String(socketGlowWidth));
-        this.rightEyeSocketGlow.setAttribute('stroke-width', String(socketGlowWidth));
-        this.leftEyeSocket.setAttribute('opacity', String(socketAlpha));
-        this.rightEyeSocket.setAttribute('opacity', String(rightSocketAlpha));
-        this.leftEyeSocketGlow.setAttribute('opacity', String(socketAlpha * (closeUp ? .18 : .22)));
-        this.rightEyeSocketGlow.setAttribute('opacity', String(rightSocketAlpha * (closeUp ? .18 : .22)));
+        setSvgAttribute(this.leftEyeSocket, 'stroke', socketColor);
+        setSvgAttribute(this.rightEyeSocket, 'stroke', socketColor);
+        setSvgAttribute(this.leftEyeSocketGlow, 'stroke', mixHex('#b88bff', socketColor, .36));
+        setSvgAttribute(this.rightEyeSocketGlow, 'stroke', mixHex('#b88bff', socketColor, .36));
+        setSvgAttribute(this.leftEyeSocket, 'stroke-width', String(socketWidth));
+        setSvgAttribute(this.rightEyeSocket, 'stroke-width', String(socketWidth));
+        setSvgAttribute(this.leftEyeSocketGlow, 'stroke-width', String(socketGlowWidth));
+        setSvgAttribute(this.rightEyeSocketGlow, 'stroke-width', String(socketGlowWidth));
+        setSvgAttribute(this.leftEyeSocket, 'opacity', String(socketAlpha));
+        setSvgAttribute(this.rightEyeSocket, 'opacity', String(rightSocketAlpha));
+        setSvgAttribute(this.leftEyeSocketGlow, 'opacity', String(socketAlpha * (closeUp ? .18 : .22)));
+        setSvgAttribute(this.rightEyeSocketGlow, 'opacity', String(rightSocketAlpha * (closeUp ? .18 : .22)));
         const accent = storyboardLocked ? '#caa4ff' : p.accentStrength > 0 ? color(p.accentColor) : '#caa4ff';
-        this.bodyPath.setAttribute('stroke', mixHex('#d8d0ff', accent, webBlend));
-        this.bodyGlow.setAttribute('fill', shape.profile > .72 ? '#5728c8' : '#7d48ed');
+        setSvgAttribute(this.bodyPath, 'stroke', mixHex('#d8d0ff', accent, webBlend));
+        setSvgAttribute(this.bodyGlow, 'fill', shape.profile > .72 ? '#5728c8' : '#7d48ed');
         const depth = storyboardLocked ? shape.depthGrade : smooth(clamp((shape.profile - .52) / .48)) * .78;
-        this.bodyProfileTone.setAttribute('opacity', String(clamp(depth * webBlend)));
-        this.bodyShadow.setAttribute('opacity', String(clamp((.10 + depth * .82) * webBlend)));
-        this.bodyEdge.setAttribute('opacity', String(clamp((.12 + depth * .56) * webBlend)));
-        this.bodyHighlight.setAttribute('opacity', String(clamp((.70 - depth * .04) * webBlend)));
-        this.bodyMidGlow.setAttribute('opacity', String(clamp(.58 * webBlend)));
+        setSvgAttribute(this.bodyProfileTone, 'opacity', String(clamp(depth * webBlend)));
+        setSvgAttribute(this.bodyShadow, 'opacity', String(clamp((.10 + depth * .82) * webBlend)));
+        setSvgAttribute(this.bodyEdge, 'opacity', String(clamp((.12 + depth * .56) * webBlend)));
+        setSvgAttribute(this.bodyHighlight, 'opacity', String(clamp((.70 - depth * .04) * webBlend)));
+        setSvgAttribute(this.bodyMidGlow, 'opacity', String(clamp(.58 * webBlend)));
         const sm = this.sceneMotion;
         if (storyboardLocked) {
             const vfxFrameBudget = 1000 / (this.quality === 'optimized' ? 24 : 30), vfxDirty = !this.lastStoryboardVfxAt || now - this.lastStoryboardVfxAt >= vfxFrameBudget || (this.storyboardMotion ?? 0) <= .001 || (this.storyboardMotion ?? 0) >= .999;
             if (vfxDirty) {
                 this.lastStoryboardVfxAt = now;
                 const orn = this.resolveStoryboardOrnaments(this.storyboardMotion, shape.side), fineTrails = this.resolveStoryboardTrails(this.storyboardMotion, shape.side), posOrbit = (shape.side > 0 ? [orbitCenter[0] * 1000, orbitCenter[1] * 1000, orbitRx * 1000, orbitRy * 1000, orbitRotationDeg, 1] : [1000 - orbitCenter[0] * 1000, orbitCenter[1] * 1000, orbitRx * 1000, orbitRy * 1000, mirrorAngle(orbitRotationDeg), 1]), rawOrbit = orn.orbit, o = mixTuple(posOrbit, rawOrbit, webBlend), orbitOpacity = clamp(o[5] * sm.orbitOpacity), sceneOrbit = [o[0] + sm.orbitOffsetX * 1000, o[1] + sm.orbitOffsetY * 1000, o[2] * sm.orbitScaleX, o[3] * sm.orbitScaleY, o[4] + sm.orbitRotation * 57.2958, orbitOpacity];
-                this.orbitBack.setAttribute('cx', String(sceneOrbit[0]));
-                this.orbitBack.setAttribute('cy', String(sceneOrbit[1]));
-                this.orbitBack.setAttribute('rx', String(sceneOrbit[2]));
-                this.orbitBack.setAttribute('ry', String(sceneOrbit[3]));
-                this.orbitBack.setAttribute('transform', `rotate(${sceneOrbit[4]} ${sceneOrbit[0]} ${sceneOrbit[1]})`);
-                this.orbitBack.setAttribute('opacity', String(orbitOpacity * .70));
-                this.orbitBack.setAttribute('stroke-width', '4.4');
+                setSvgAttribute(this.orbitBack, 'cx', String(sceneOrbit[0]));
+                setSvgAttribute(this.orbitBack, 'cy', String(sceneOrbit[1]));
+                setSvgAttribute(this.orbitBack, 'rx', String(sceneOrbit[2]));
+                setSvgAttribute(this.orbitBack, 'ry', String(sceneOrbit[3]));
+                setSvgAttribute(this.orbitBack, 'transform', `rotate(${sceneOrbit[4]} ${sceneOrbit[0]} ${sceneOrbit[1]})`);
+                setSvgAttribute(this.orbitBack, 'opacity', String(orbitOpacity * .70));
+                setSvgAttribute(this.orbitBack, 'stroke-width', '4.4');
                 const frontArc = ellipseFrontArc(sceneOrbit);
-                this.orbitFront.setAttribute('d', openPath(frontArc));
-                this.orbitFront.setAttribute('opacity', String(orbitOpacity * .98));
-                this.orbitFront.setAttribute('stroke-width', '4.0');
+                setSvgAttribute(this.orbitFront, 'd', openPath(frontArc));
+                setSvgAttribute(this.orbitFront, 'opacity', String(orbitOpacity * .98));
+                setSvgAttribute(this.orbitFront, 'stroke-width', '4.0');
                 const cresPts = c18(crescentPath), cc = centroid(cresPts), posC = (shape.side > 0 ? [155, 556, 1, 0, 1] : [845, 556, 1, 0, 1]), rawC = orn.crescent, c = mixTuple(posC, rawC, webBlend), cresTransform = `translate(${c[0] + sm.crescentOffsetX * 1000} ${c[1] + sm.crescentOffsetY * 1000}) rotate(${c[3] + sm.crescentRotation * 57.2958}) scale(${c[2] * sm.crescentScale}) translate(${-cc[0]} ${-cc[1]})`;
-                this.posCrescentImage.setAttribute('transform', cresTransform);
-                this.posCrescentImage.setAttribute('opacity', String(clamp(posBlend * c[4] * sm.crescentOpacity)));
-                this.crescent.setAttribute('transform', cresTransform);
-                this.crescent.setAttribute('opacity', String(clamp(c[4] * sm.crescentOpacity * (webBlend + posBlend * .24))));
+                setSvgAttribute(this.posCrescentImage, 'transform', cresTransform);
+                setSvgAttribute(this.posCrescentImage, 'opacity', String(clamp(posBlend * c[4] * sm.crescentOpacity)));
+                setSvgAttribute(this.crescent, 'transform', cresTransform);
+                setSvgAttribute(this.crescent, 'opacity', String(clamp(c[4] * sm.crescentOpacity * (webBlend + posBlend * .24))));
                 const posStarCenters = [[star0Center[0] * 1000, star0Center[1] * 1000], [star1Center[0] * 1000, star1Center[1] * 1000], [star2Center[0] * 1000, star2Center[1] * 1000]], posStarOuter = [star0Outer, star1Outer, star2Outer], posStarInner = [star0Inner, star1Inner, star2Inner];
-                this.stars.forEach((node, i) => { const raw = orn.stars[i] ?? [500, 500, 0, 0, 0], pc = posStarCenters[i], posQ = (shape.side > 0 ? [pc[0], pc[1], 1, 0, 1] : [1000 - pc[0], pc[1], 1, 0, 1]), q = mixTuple(posQ, raw, webBlend), outer = lerp((posStarOuter[i] ?? star0Outer) * 1000, star0Outer * 1000 * raw[2], webBlend), inner = lerp((posStarInner[i] ?? star0Inner) * 1000, star0Inner * 1000 * raw[2], webBlend), cfg = i === 0 ? { x: sm.star0OffsetX, y: sm.star0OffsetY, r: sm.star0Rotation, sc: sm.star0Scale, o: sm.star0Opacity } : i === 1 ? { x: sm.star1OffsetX, y: sm.star1OffsetY, r: sm.star1Rotation, sc: sm.star1Scale, o: sm.star1Opacity } : { x: sm.star2OffsetX, y: sm.star2OffsetY, r: sm.star2Rotation, sc: sm.star2Scale, o: sm.star2Opacity }, sx = q[0] + cfg.x * 1000, sy = q[1] + cfg.y * 1000; node.setAttribute('d', starD(sx, sy, outer * cfg.sc, inner * cfg.sc)); if (Math.abs(cfg.r) > .00001)
-                    node.setAttribute('transform', `rotate(${cfg.r * 57.2958} ${sx} ${sy})`);
+                this.stars.forEach((node, i) => { const raw = orn.stars[i] ?? [500, 500, 0, 0, 0], pc = posStarCenters[i], posQ = (shape.side > 0 ? [pc[0], pc[1], 1, 0, 1] : [1000 - pc[0], pc[1], 1, 0, 1]), q = mixTuple(posQ, raw, webBlend), outer = lerp((posStarOuter[i] ?? star0Outer) * 1000, star0Outer * 1000 * raw[2], webBlend), inner = lerp((posStarInner[i] ?? star0Inner) * 1000, star0Inner * 1000 * raw[2], webBlend), cfg = i === 0 ? { x: sm.star0OffsetX, y: sm.star0OffsetY, r: sm.star0Rotation, sc: sm.star0Scale, o: sm.star0Opacity } : i === 1 ? { x: sm.star1OffsetX, y: sm.star1OffsetY, r: sm.star1Rotation, sc: sm.star1Scale, o: sm.star1Opacity } : { x: sm.star2OffsetX, y: sm.star2OffsetY, r: sm.star2Rotation, sc: sm.star2Scale, o: sm.star2Opacity }, sx = q[0] + cfg.x * 1000, sy = q[1] + cfg.y * 1000; setSvgAttribute(node, 'd', starD(sx, sy, outer * cfg.sc, inner * cfg.sc)); if (Math.abs(cfg.r) > .00001)
+                    setSvgAttribute(node, 'transform', `rotate(${cfg.r * 57.2958} ${sx} ${sy})`);
                 else
-                    node.removeAttribute('transform'); node.setAttribute('opacity', String(clamp(q[4] * cfg.o))); });
+                    removeSvgAttribute(node, 'transform'); setSvgAttribute(node, 'opacity', String(clamp(q[4] * cfg.o))); });
                 this.sparkleNodes.forEach((node, i) => { const q = orn.sparkles[i]; if (!q) {
-                    node.setAttribute('d', '');
-                    node.setAttribute('opacity', '0');
+                    setSvgAttribute(node, 'd', '');
+                    setSvgAttribute(node, 'opacity', '0');
                     return;
-                } const outer = Math.max(2.2, q[2] * 1.55), inner = Math.max(.55, outer * .22); node.setAttribute('d', starD(q[0], q[1], outer, inner)); node.setAttribute('opacity', String(clamp(q[3]))); });
-                this.trailGroup.setAttribute('opacity', '1');
+                } const outer = Math.max(2.2, q[2] * 1.55), inner = Math.max(.55, outer * .22); setSvgAttribute(node, 'd', starD(q[0], q[1], outer, inner)); setSvgAttribute(node, 'opacity', String(clamp(q[3]))); });
+                setSvgAttribute(this.trailGroup, 'opacity', '1');
                 const bloomId = shape.side > 0 ? `${this.uid}-trailBloomRight` : `${this.uid}-trailBloomLeft`, coreId = shape.side > 0 ? `${this.uid}-trailCoreRight` : `${this.uid}-trailCoreLeft`;
                 for (let i = 0; i < 4; i++) {
                     const ribbon = orn.trails[i] ?? [], rd = ribbon.length ? openPath(ribbon) : '', active = ribbon.length ? orn.trailOpacity * orn.trailIntensityScale : 0, outer = this.energyTrailOuter[i], mid = this.energyTrailMid[i], energyCore = this.energyTrailCore[i], gw = ([105, 78, 56, 38][i] ?? 38) * orn.trailWidthScale, mw = [24, 18, 13, 9][i] ?? 9, cw = [5.8, 4.6, 3.6, 2.8][i] ?? 2.8;
                     for (const node of [outer, mid, energyCore])
-                        node.setAttribute('d', rd);
-                    outer.setAttribute('stroke', `url(#${bloomId})`);
-                    mid.setAttribute('stroke', `url(#${bloomId})`);
-                    energyCore.setAttribute('stroke', `url(#${coreId})`);
-                    outer.setAttribute('stroke-width', String(gw));
-                    mid.setAttribute('stroke-width', String(mw));
-                    energyCore.setAttribute('stroke-width', String(cw));
+                        setSvgAttribute(node, 'd', rd);
+                    setSvgAttribute(outer, 'stroke', `url(#${bloomId})`);
+                    setSvgAttribute(mid, 'stroke', `url(#${bloomId})`);
+                    setSvgAttribute(energyCore, 'stroke', `url(#${coreId})`);
+                    setSvgAttribute(outer, 'stroke-width', String(gw));
+                    setSvgAttribute(mid, 'stroke-width', String(mw));
+                    setSvgAttribute(energyCore, 'stroke-width', String(cw));
                     const broadOuterOpacity = [.50, .42, .24, .16][i] ?? .16, broadMidOpacity = [.68, .55, .20, .12][i] ?? .12, broadCoreOpacity = [.95, .78, 0, 0][i] ?? 0;
-                    outer.setAttribute('opacity', String(clamp(active * broadOuterOpacity)));
-                    mid.setAttribute('opacity', String(clamp(active * broadMidOpacity)));
-                    energyCore.setAttribute('opacity', String(clamp(active * broadCoreOpacity)));
+                    setSvgAttribute(outer, 'opacity', String(clamp(active * broadOuterOpacity)));
+                    setSvgAttribute(mid, 'opacity', String(clamp(active * broadMidOpacity)));
+                    setSvgAttribute(energyCore, 'opacity', String(clamp(active * broadCoreOpacity)));
                     const path = fineTrails.paths[i] ?? [], d = path.length ? openPath(path) : '', glow = this.trailGlows[i], core = this.trails[i], fineActive = path.length ? fineTrails.opacity * orn.trailIntensityScale : 0;
-                    glow.setAttribute('d', d);
-                    core.setAttribute('d', d);
+                    setSvgAttribute(glow, 'd', d);
+                    setSvgAttribute(core, 'd', d);
                     const fineGlowW = ([135, 72, 46, 30][i] ?? 30) * orn.trailWidthScale, fineCoreW = [9.5, 5, 3.5, 2.5][i] ?? 2.5;
-                    glow.setAttribute('stroke', `url(#${bloomId})`);
-                    core.setAttribute('stroke', `url(#${coreId})`);
-                    glow.setAttribute('stroke-width', String(fineGlowW));
-                    core.setAttribute('stroke-width', String(fineCoreW));
-                    glow.setAttribute('filter', i === 0 ? `url(#${this.uid}-energyTrailBlur)` : `url(#${this.uid}-trailGlow)`);
-                    glow.setAttribute('opacity', String(clamp(fineActive * (i === 0 ? .68 : .50 - i * .05))));
-                    core.setAttribute('opacity', String(clamp(fineActive * (i === 0 ? .94 : .78 - i * .07))));
+                    setSvgAttribute(glow, 'stroke', `url(#${bloomId})`);
+                    setSvgAttribute(core, 'stroke', `url(#${coreId})`);
+                    setSvgAttribute(glow, 'stroke-width', String(fineGlowW));
+                    setSvgAttribute(core, 'stroke-width', String(fineCoreW));
+                    setSvgAttribute(glow, 'filter', i === 0 ? `url(#${this.uid}-energyTrailBlur)` : `url(#${this.uid}-trailGlow)`);
+                    setSvgAttribute(glow, 'opacity', String(clamp(fineActive * (i === 0 ? .68 : .50 - i * .05))));
+                    setSvgAttribute(core, 'opacity', String(clamp(fineActive * (i === 0 ? .94 : .78 - i * .07))));
                 }
                 const beam = orn.beam, beamD = beam[5] > .001 ? `M ${beam[0]} ${beam[1]} L ${beam[2]} ${beam[3]}` : '';
                 for (const node of [this.landingBeamOuter, this.landingBeamMid, this.landingBeamCore])
-                    node.setAttribute('d', beamD);
-                this.landingBeamOuter.setAttribute('stroke-width', String(beam[4] * 1.18));
-                this.landingBeamMid.setAttribute('stroke-width', String(Math.max(8, beam[4] * .38)));
-                this.landingBeamCore.setAttribute('stroke-width', String(Math.max(3, beam[4] * .07)));
-                this.landingBeamOuter.setAttribute('opacity', String(clamp(beam[5] * .34)));
-                this.landingBeamMid.setAttribute('opacity', String(clamp(beam[5] * .62)));
-                this.landingBeamCore.setAttribute('opacity', String(clamp(beam[5] * .92)));
+                    setSvgAttribute(node, 'd', beamD);
+                setSvgAttribute(this.landingBeamOuter, 'stroke-width', String(beam[4] * 1.18));
+                setSvgAttribute(this.landingBeamMid, 'stroke-width', String(Math.max(8, beam[4] * .38)));
+                setSvgAttribute(this.landingBeamCore, 'stroke-width', String(Math.max(3, beam[4] * .07)));
+                setSvgAttribute(this.landingBeamOuter, 'opacity', String(clamp(beam[5] * .34)));
+                setSvgAttribute(this.landingBeamMid, 'opacity', String(clamp(beam[5] * .62)));
+                setSvgAttribute(this.landingBeamCore, 'opacity', String(clamp(beam[5] * .92)));
             }
         }
         else {
-            this.sparkleNodes.forEach(node => { node.setAttribute('d', ''); node.setAttribute('opacity', '0'); });
+            this.sparkleNodes.forEach(node => { setSvgAttribute(node, 'd', ''); setSvgAttribute(node, 'opacity', '0'); });
             for (const node of [...this.energyTrailOuter, ...this.energyTrailMid, ...this.energyTrailCore]) {
-                node.setAttribute('d', '');
-                node.setAttribute('opacity', '0');
+                setSvgAttribute(node, 'd', '');
+                setSvgAttribute(node, 'opacity', '0');
             }
             const orbitOpacity = clamp(p.orbitOpacity * sm.orbitOpacity), orbitRot = orbitRotationDeg + (p.orbitRotation + sm.orbitRotation) * 57.2958 + shape.side * shape.profile * 4, ocx = orbitCenter[0] * 1000, ocy = orbitCenter[1] * 1000, orbitDx = sm.orbitOffsetX * 1000 - shape.side * shape.profile * 8, orbitDy = sm.orbitOffsetY * 1000;
-            this.orbitBack.setAttribute('cx', String(ocx));
-            this.orbitBack.setAttribute('cy', String(ocy));
-            this.orbitBack.setAttribute('rx', String(orbitRx * 1000));
-            this.orbitBack.setAttribute('ry', String(orbitRy * 1000));
-            this.orbitBack.setAttribute('opacity', String(orbitOpacity * .72));
-            this.orbitBack.setAttribute('transform', `translate(${ocx + orbitDx} ${ocy + orbitDy}) rotate(${orbitRot}) scale(${sm.orbitScaleX * (1 - shape.profile * .10)} ${sm.orbitScaleY}) translate(${-ocx} ${-ocy})`);
+            setSvgAttribute(this.orbitBack, 'cx', String(ocx));
+            setSvgAttribute(this.orbitBack, 'cy', String(ocy));
+            setSvgAttribute(this.orbitBack, 'rx', String(orbitRx * 1000));
+            setSvgAttribute(this.orbitBack, 'ry', String(orbitRy * 1000));
+            setSvgAttribute(this.orbitBack, 'opacity', String(orbitOpacity * .72));
+            setSvgAttribute(this.orbitBack, 'transform', `translate(${ocx + orbitDx} ${ocy + orbitDy}) rotate(${orbitRot}) scale(${sm.orbitScaleX * (1 - shape.profile * .10)} ${sm.orbitScaleY}) translate(${-ocx} ${-ocy})`);
             const rx = orbitRx * 1000 * (1 - shape.profile * .10), ry = orbitRy * 1000, ang = orbitRot * Math.PI / 180, x0 = ocx + orbitDx + Math.cos(ang) * rx * .80, y0 = ocy + orbitDy + Math.sin(ang) * rx * .80, x1 = ocx + orbitDx - Math.cos(ang) * rx * .90, y1 = ocy + orbitDy - Math.sin(ang) * rx * .90;
-            this.orbitFront.setAttribute('d', `M ${x0} ${y0} Q ${ocx + orbitDx} ${ocy + orbitDy + ry * 1.22} ${x1} ${y1}`);
-            this.orbitFront.setAttribute('opacity', String(orbitOpacity * .82));
+            setSvgAttribute(this.orbitFront, 'd', `M ${x0} ${y0} Q ${ocx + orbitDx} ${ocy + orbitDy + ry * 1.22} ${x1} ${y1}`);
+            setSvgAttribute(this.orbitFront, 'opacity', String(orbitOpacity * .82));
             const cresPts = c18(crescentPath), cc = centroid(cresPts), crescentScale = sm.crescentScale * (1 + shape.profile * .03), cresTransform = `translate(${cc[0] + sm.crescentOffsetX * 1000 - shape.side * shape.profile * 18} ${cc[1] + sm.crescentOffsetY * 1000}) rotate(${sm.crescentRotation * 57.2958}) scale(${crescentScale}) translate(${-cc[0]} ${-cc[1]})`;
-            this.posCrescentImage.setAttribute('transform', cresTransform);
-            this.posCrescentImage.setAttribute('opacity', String(clamp(posBlend * sm.crescentOpacity)));
-            this.crescent.setAttribute('transform', cresTransform);
-            this.crescent.setAttribute('opacity', String(clamp(sm.crescentOpacity * (.78 + .22 * p.glow) * (webBlend + posBlend * .24))));
+            setSvgAttribute(this.posCrescentImage, 'transform', cresTransform);
+            setSvgAttribute(this.posCrescentImage, 'opacity', String(clamp(posBlend * sm.crescentOpacity)));
+            setSvgAttribute(this.crescent, 'transform', cresTransform);
+            setSvgAttribute(this.crescent, 'opacity', String(clamp(sm.crescentOpacity * (.78 + .22 * p.glow) * (webBlend + posBlend * .24))));
             const starCenters = [[star0Center[0] * 1000, star0Center[1] * 1000], [star1Center[0] * 1000, star1Center[1] * 1000], [star2Center[0] * 1000, star2Center[1] * 1000]], starScene = [{ x: sm.star0OffsetX, y: sm.star0OffsetY, r: sm.star0Rotation, sc: sm.star0Scale, o: sm.star0Opacity }, { x: sm.star1OffsetX, y: sm.star1OffsetY, r: sm.star1Rotation, sc: sm.star1Scale, o: sm.star1Opacity }, { x: sm.star2OffsetX, y: sm.star2OffsetY, r: sm.star2Rotation, sc: sm.star2Scale, o: sm.star2Opacity }];
-            this.stars.forEach((node, i) => { const base = starCenters[i], cfg = starScene[i], spread = clamp(p.starSpread, -.2, .36), dx = (base[0] - 500) * spread + cfg.x * 1000 + shape.side * shape.profile * (i === 0 ? 15 : -9), dy = (base[1] - 510) * spread + cfg.y * 1000, pulse = 1 + clamp((i === 0 ? p.starPulse : p.sparkle) * (i === 0 ? .13 : .08), -.12, .18), sc = cfg.sc * pulse, twinkle = this.reduced ? 1 : .88 + .12 * Math.sin(seconds * (1.7 + i * .21) + i * 1.31); node.setAttribute('d', starD(base[0], base[1], (i === 0 ? star0Outer : i === 1 ? star1Outer : star2Outer) * 1000, (i === 0 ? star0Inner : i === 1 ? star1Inner : star2Inner) * 1000)); node.setAttribute('transform', `translate(${base[0] + dx} ${base[1] + dy}) rotate(${cfg.r * 57.2958}) scale(${sc}) translate(${-base[0]} ${-base[1]})`); node.setAttribute('opacity', String(clamp(cfg.o * twinkle))); });
+            this.stars.forEach((node, i) => { const base = starCenters[i], cfg = starScene[i], spread = clamp(p.starSpread, -.2, .36), dx = (base[0] - 500) * spread + cfg.x * 1000 + shape.side * shape.profile * (i === 0 ? 15 : -9), dy = (base[1] - 510) * spread + cfg.y * 1000, pulse = 1 + clamp((i === 0 ? p.starPulse : p.sparkle) * (i === 0 ? .13 : .08), -.12, .18), sc = cfg.sc * pulse, twinkle = this.reduced ? 1 : .88 + .12 * Math.sin(seconds * (1.7 + i * .21) + i * 1.31); setSvgAttribute(node, 'd', starD(base[0], base[1], (i === 0 ? star0Outer : i === 1 ? star1Outer : star2Outer) * 1000, (i === 0 ? star0Inner : i === 1 ? star1Inner : star2Inner) * 1000)); setSvgAttribute(node, 'transform', `translate(${base[0] + dx} ${base[1] + dy}) rotate(${cfg.r * 57.2958}) scale(${sc}) translate(${-base[0]} ${-base[1]})`); setSvgAttribute(node, 'opacity', String(clamp(cfg.o * twinkle))); });
             const trailOn = clamp((shape.profile - .45) / .55) * clamp(this.travel.energy * 1.4);
-            this.trailGroup.setAttribute('opacity', String(trailOn));
+            setSvgAttribute(this.trailGroup, 'opacity', String(trailOn));
             const sign = shape.side;
-            this.trails.forEach((tr, i) => { const y = 470 + i * 60, xStart = sign > 0 ? 270 : 730, xEnd = sign > 0 ? -80 : 1080, d = `M ${xStart} ${y} C ${xStart - sign * 120} ${y - 25},${xEnd + sign * 160} ${y + 20},${xEnd} ${y + 15}`; tr.setAttribute('d', d); tr.setAttribute('stroke', i === 0 ? '#7f45ff' : i === 1 ? '#ba86ff' : i === 2 ? '#f0c7ff' : '#6d3de0'); tr.setAttribute('stroke-width', String(Math.max(3.5, 15 - i * 3))); tr.setAttribute('opacity', String(Math.max(.18, .58 - i * .085))); this.trailGlows[i].setAttribute('d', ''); });
+            this.trails.forEach((tr, i) => { const y = 470 + i * 60, xStart = sign > 0 ? 270 : 730, xEnd = sign > 0 ? -80 : 1080, d = `M ${xStart} ${y} C ${xStart - sign * 120} ${y - 25},${xEnd + sign * 160} ${y + 20},${xEnd} ${y + 15}`; setSvgAttribute(tr, 'd', d); setSvgAttribute(tr, 'stroke', i === 0 ? '#7f45ff' : i === 1 ? '#ba86ff' : i === 2 ? '#f0c7ff' : '#6d3de0'); setSvgAttribute(tr, 'stroke-width', String(Math.max(3.5, 15 - i * 3))); setSvgAttribute(tr, 'opacity', String(Math.max(.18, .58 - i * .085))); this.trailGlows[i].setAttribute('d', ''); });
         }
         this.layout();
     }

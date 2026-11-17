@@ -7,6 +7,10 @@
  */
 (() => {
   'use strict';
+  const frames = window.chispaFrames ?? {
+    requestAnimationFrame: (fn) => globalThis.requestAnimationFrame(fn),
+    cancelAnimationFrame: (id) => globalThis.cancelAnimationFrame(id),
+  };
   // Publicado: el diálogo empieza automáticamente tras la aparición de Lavender.
 
   const SECTIONS = Object.freeze([
@@ -330,10 +334,12 @@
 
       this.onVisibility = this.onVisibility.bind(this);
       this.onResize = this.onResize.bind(this);
-      this.onPageHide = this.destroy.bind(this);
+      this.onPageHide = (event) => { if (!event?.persisted) this.destroy(); };
+      this.onPageShow = () => { if (!document.hidden) this.onVisibility(); };
       document.addEventListener('visibilitychange', this.onVisibility);
       window.addEventListener('resize', this.onResize, { passive: true });
-      window.addEventListener('pagehide', this.onPageHide, { once: true });
+      window.addEventListener('pagehide', this.onPageHide);
+      window.addEventListener('pageshow', this.onPageShow);
       // The actor stays truly animated by LavenderSvgEngine (not a static mock).
       // Pause her random idle gazes to let the scripted acting beats be deliberate.
       this.lavender?.idle?.stop?.();
@@ -353,7 +359,7 @@
     start() {
       if (this.destroyed || this.started) return;
       this.started = true;
-      this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
+      this.positionRaf = frames.requestAnimationFrame((time) => this.positionTick(time));
       // Give Lavender time to move gently to her reading position.
       this.schedule(() => this.advance(), reducedMotion ? 600 : (window.innerWidth <= 640 ? 2150 : 850));
     }
@@ -562,9 +568,11 @@
     }
     positionTick(now) {
       if (this.destroyed || this.ended) return;
-      this.positionRaf = requestAnimationFrame((time) => this.positionTick(time));
       const stageMoving = !this.stageStartedAt || now - this.stageStartedAt < 2050;
       const interval = this.narrativeMobile ? (stageMoving ? 34 : 100) : 65;
+      this.positionRaf = frames.requestAnimationFrame((time) => this.positionTick(time), {
+        at: now + interval, label: 'narrative-position', priority: 10,
+      });
       if (now - this.lastRenderAt >= interval && !document.hidden) {
         this.lastRenderAt = now;
         this.updateStage(now);
@@ -646,12 +654,16 @@
     }
     onVisibility() {
       if (this.destroyed) return;
+      if (this.ended) { if (!document.hidden) this.root.remove(); return; }
       if (document.hidden) {
+        if (this.positionRaf) frames.cancelAnimationFrame(this.positionRaf);
+        this.positionRaf = 0;
         if (this.timer !== null) clearTimeout(this.timer);
         this.timer = null;
         this.clearActingTimers();
         this.waitingVisibility = true;
       } else if (this.waitingVisibility) {
+        if (!this.positionRaf) this.positionRaf = frames.requestAnimationFrame((time) => this.positionTick(time));
         this.waitingVisibility = false;
         if (!this.page) this.schedule(() => this.advance(), 300);
         else if (this.charIndex >= this.clusters.length) this.schedule(() => this.showComplete(), 500);
@@ -670,7 +682,7 @@
       }
       this.clearActingTimers();
       this.root.classList.remove('is-visible');
-      if (this.positionRaf) cancelAnimationFrame(this.positionRaf);
+      if (this.positionRaf) frames.cancelAnimationFrame(this.positionRaf);
       this.positionRaf = 0;
       this.schedule(() => this.root.remove(), 1000);
       const firstX = this.lavender?.baseSceneView?.centerX ?? this.initialCenterX;
@@ -681,14 +693,14 @@
         const eased = k * k * (3 - 2 * k);
         if (this.lavender?.baseSceneView) this.lavender.baseSceneView.centerX = firstX + (this.initialCenterX - firstX) * eased;
         this.lavender?.applyIdleDrift?.(0, .012);
-        if (k < 1) this.returnRaf = requestAnimationFrame(goHome);
+        if (k < 1) this.returnRaf = frames.requestAnimationFrame(goHome);
         else {
           this.returnRaf = 0;
           this.lavender?.engine?.setState?.('lament');
           this.lavender?.startMelancholicIdle?.(this.residualTargets);
         }
       };
-      this.returnRaf = requestAnimationFrame(goHome);
+      this.returnRaf = frames.requestAnimationFrame(goHome);
     }
     destroy() {
       if (this.destroyed) return;
@@ -696,8 +708,8 @@
       if (this.timer !== null) clearTimeout(this.timer);
       this.timer = null;
       this.clearActingTimers();
-      if (this.positionRaf) cancelAnimationFrame(this.positionRaf);
-      if (this.returnRaf) cancelAnimationFrame(this.returnRaf);
+      if (this.positionRaf) frames.cancelAnimationFrame(this.positionRaf);
+      if (this.returnRaf) frames.cancelAnimationFrame(this.returnRaf);
       this.positionRaf = 0;
       this.returnRaf = 0;
       this.vocals.destroy();
@@ -707,6 +719,7 @@
       document.removeEventListener('visibilitychange', this.onVisibility);
       window.removeEventListener('resize', this.onResize);
       window.removeEventListener('pagehide', this.onPageHide);
+      window.removeEventListener('pageshow', this.onPageShow);
       this.root.remove();
     }
     getStatus() {

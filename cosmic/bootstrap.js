@@ -170,7 +170,7 @@ export function resolveCosmicSiteRoot(moduleUrl = import.meta.url) {
   return new URL('../', moduleUrl).href;
 }
 
-const PREPARATION_DIAGNOSTIC_VERSION = '20260928p';
+const PREPARATION_DIAGNOSTIC_VERSION = '20261116perf';
 
 export function createCosmicLayer(doc = globalThis.document) {
   const existing = doc?.querySelector?.('#cosmic-event-layer');
@@ -235,7 +235,12 @@ export function installProductionCosmicBootstrap({
   const loader = createLoaderView(doc);
   let bootstrap;
   bootstrap = installCosmicBootstrap({
-    onProgress: (stage) => loader?.update(stage),
+    onProgress: (stage) => {
+      loader?.update(stage);
+      if (typeof win?.dispatchEvent === 'function' && typeof win?.CustomEvent === 'function') {
+        win.dispatchEvent(new win.CustomEvent('chispa:scene-state', { detail: { stage } }));
+      }
+    },
     createController: async () => {
       const layer = createCosmicLayer(doc);
       const runtimeUrl = new URL(`./production-runtime.js?prepdiag=${PREPARATION_DIAGNOSTIC_VERSION}`, moduleUrl).href;

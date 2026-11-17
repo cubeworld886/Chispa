@@ -160,6 +160,7 @@ export function sampleShardTransform(shard, cinematicSeconds) {
 }
 
 function defaultResidualScheduler() {
+  if (globalThis.chispaFrames) return globalThis.chispaFrames;
   return {
     now: () => globalThis.performance?.now?.() ?? Date.now(),
     requestAnimationFrame: (fn) => globalThis.requestAnimationFrame(fn),
@@ -193,6 +194,7 @@ export class ConstellationFracture {
     this.residualRaf = null;
     this.residualStartedAt = 0;
     this.residualCinematicStart = 0;
+    this.residualActive = false;
   }
 
   refreshGeometry() {
@@ -402,6 +404,7 @@ export class ConstellationFracture {
     if (this.residualRaf != null) scheduler.cancelAnimationFrame?.(this.residualRaf);
     this.residualCinematicStart = Number.isFinite(startSeconds) ? startSeconds : COSMIC_PHASES.melancholicIdle.start;
     this.residualStartedAt = scheduler.now?.() ?? 0;
+    this.residualActive = true;
     // Shards move just 2-7 px/min after impact. Updating every phone
     // refresh wastes GPU compositing and keeps many SVG layers hot.
     // The cinematic explosion still runs at the original rate.
@@ -412,18 +415,22 @@ export class ConstellationFracture {
       if (shard.wrapper?.style) shard.wrapper.style.willChange = 'auto';
     }
     const tick = (now) => {
+      if (!this.residualActive) return;
       const time = Number.isFinite(now) ? now : (scheduler.now?.() ?? 0);
       if (time - lastSampleAt >= intervalMs) {
         const elapsed = Math.max(0, (time - this.residualStartedAt) / 1000);
         this.sampleAt(this.residualCinematicStart + elapsed);
         lastSampleAt = time;
       }
-      this.residualRaf = scheduler.requestAnimationFrame?.(tick) ?? null;
+      this.residualRaf = scheduler.requestAnimationFrame?.(tick, {
+        at: lastSampleAt + intervalMs, label: 'shards', priority: 30,
+      }) ?? null;
     };
     this.residualRaf = scheduler.requestAnimationFrame?.(tick) ?? null;
   }
 
   stopResidualDrift(scheduler = this.scheduler) {
+    this.residualActive = false;
     if (this.residualRaf != null) scheduler.cancelAnimationFrame?.(this.residualRaf);
     this.residualRaf = null;
   }

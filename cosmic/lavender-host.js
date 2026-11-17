@@ -33,6 +33,7 @@ export class ChispaLavenderHost {
     this.idle = null;
     this.baseSceneView = null;
     this.mounted = false;
+    this.lastRevealProgress = null;
   }
 
   async mount() {
@@ -41,6 +42,7 @@ export class ChispaLavenderHost {
       quality: this.reducedMotion ? 'optimized' : 'auto',
       interactive: false,
       reducedMotion: this.reducedMotion,
+      scheduler: this.scheduler ?? globalThis.chispaFrames,
     });
     await this.engine.init();
     this.engine.setCinematicLock(true);
@@ -63,6 +65,7 @@ export class ChispaLavenderHost {
 
   primeReveal() {
     if (!this.engine) return;
+    this.lastRevealProgress = null;
     this.engine.setCinematicLock(true);
     this.engine.setCinematicPerformance?.(false);
     this.engine.setCinematicBodyReveal(0);
@@ -111,6 +114,8 @@ export class ChispaLavenderHost {
   setRevealProgress(progress) {
     if (!this.engine) throw new Error('Lavender must be mounted before reveal');
     const amount = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0));
+    if (amount === this.lastRevealProgress) return;
+    this.lastRevealProgress = amount;
     const eased = amount * amount * (3 - 2 * amount);
     const eyeProgress = Math.max(0, Math.min(1, (eased - 0.48) / 0.52));
     this.engine.setCinematicBodyReveal(eased);
@@ -123,7 +128,7 @@ export class ChispaLavenderHost {
       star1Opacity: 0.24 * eased,
       star2Opacity: 0.22 * eased,
     });
-    this.engine.forceVisibleFrame?.();
+    // The running engine is the sole render owner; setters never bypass its FPS cap.
   }
 
   enterLament({ eventPoint = null } = {}) {
